@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مُدير ومولّد ورابط الأنظمة السحابيّ الموحّد | أ. عماد سعيد محمّد</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --primary: #0f4c81;
+      --primary-dark: #093256;
+      --accent: #0d9488;
+      --accent-hover: #0f766e;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --warning: #d97706;
+      --shadow: 0 4px 16px rgba(15, 76, 129, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      user-select: none;
+    }
+
+    input, textarea, select, pre, code {
+      user-select: text;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* شاشة الحماية بالرقم السري */
+    #lockScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+
+    .lock-card {
+      background: var(--card);
+      width: 100%;
+      max-width: 400px;
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .lock-badge {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .lock-card h2 {
+      margin: 0 0 8px;
+      color: var(--primary-dark);
+      font-size: 20px;
+    }
+
+    .lock-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* الترويسة */
+    header {
+      background: linear-gradient(120deg, var(--primary-dark), var(--primary));
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .brand span {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .status-pill {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fbbf24;
+    }
+
+    .dot.online {
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+    }
+
+    /* التبويبات */
+    nav.tabs {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 8px 24px 0;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: #f8fafc;
+      border-radius: 8px 8px 0 0;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1160px;
+      width: 100%;
+      margin: 22px auto;
+      padding: 0 16px;
+    }
+
+    .panel {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      color: var(--primary-dark);
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* منطقة الرفع */
+    .drop-zone {
+      border: 2px dashed #3b82f6;
+      background: linear-gradient(180deg, #f8fafc, #eff6ff);
+      border-radius: 14px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: #f0fdfa;
+      transform: translateY(-2px);
+    }
+
+    .drop-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 10px;
+      border-radius: 16px;
+      background: #dbeafe;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .scan-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-right: 5px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .scan-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .badge-tag {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .badge-tag.smart { background: #dcfce7; color: #166534; }
+    .badge-tag.purple { background: #f3e8ff; color: #6b21a8; }
+    .badge-tag.warn { background: #fef3c7; color: #92400e; }
+
+    /* بطاقة تحذير التكرار */
+    .dup-alert {
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .dup-alert h4 {
+      margin: 0 0 8px;
+      color: #b45309;
+      font-size: 16px;
+    }
+
+    .dup-alert p {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: #78350f;
+      line-height: 1.7;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-warning:hover:not(:disabled) { background: #b45309; }
+    .btn-outline { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-outline:hover:not(:disabled) { background: #eff6ff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .btn-sm { padding: 6px 11px; font-size: 12px; }
+
+    /* إحصاءات التقرير */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .stat-card .num {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .stat-card .lbl {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* جدول التقرير الشامل */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    table.report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    table.report-table th {
+      background: var(--primary-dark);
+      color: #fff;
+      padding: 12px 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    table.report-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+
+    table.report-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .code-pill {
+      display: inline-block;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #0f172a;
+      direction: ltr;
+    }
+
+    /* نافذة الباركود الاحترافية */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 18px;
+      max-width: 440px;
+      width: 100%;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .qr-poster {
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 3px solid var(--primary);
+      border-radius: 16px;
+      padding: 22px 18px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .qr-poster-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .qr-poster-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      margin: 0 0 14px;
+      line-height: 1.5;
+    }
+
+    #qrCanvasBox {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 14px;
+      padding: 10px;
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-poster-hint {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .qr-poster-url {
+      font-size: 11px;
+      color: var(--muted);
+      direction: ltr;
+      word-break: break-all;
+      background: #f1f5f9;
+      padding: 5px 8px;
+      border-radius: 6px;
+    }
+
+    .qr-poster-footer {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: 0.25s;
+      z-index: 10001;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    footer {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    footer strong {
+      color: var(--primary-dark);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- شاشة الحماية بالرقم السري -->
+  <div id="lockScreen">
+    <div class="lock-card">
+      <div class="lock-badge">🔐</div>
+      <h2>لوحة التحكّم السحابيّة المحميّة</h2>
+      <p>أدخل الرقم السرّيّ للمتابعة إلى نظام إدارة وربط المشاريع</p>
+      <div class="form-group">
+        <input type="password" id="pinInput" placeholder="الرقم السرّيّ (الافتراضي: 2026)" style="text-align:center; font-size:18px; letter-spacing:4px;">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="unlockSystem()">دخول إلى النظام</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="brand">
+      <h1>مُدير ومولّد ورابط الأنظمة السحابيّ الموحّد</h1>
+      <span>قاعدة البيانات المركزيّة: emad-smart-planner</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="status-pill">
+        <span class="dot online" id="connDot"></span>
+        <span id="connText">متّصل بالسحابة بنجاح</span>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.2); color:#fff;" onclick="lockNow()">قفل 🔒</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn" id="tabBtn-injector" onclick="switchTab('injector', this)">🔗 ربط ونشر لعبة أو منصّة</button>
+    <button class="tab-btn" id="tabBtn-report" onclick="switchTab('report', this)">📊 التقرير الشامل والباركود (<span id="projCount">0</span>)</button>
+    <button class="tab-btn" id="tabBtn-generator" onclick="switchTab('generator', this)">⚡ توليد قالب جديد</button>
+    <button class="tab-btn" id="tabBtn-shared" onclick="switchTab('shared', this)">🏫 البيانات المشتركة والشهادات</button>
+    <button class="tab-btn active" id="tabBtn-settings" onclick="switchTab('settings', this)">⚙️ الاستضافة والحماية</button>
+  </nav>
+
+  <main>
+    <!-- التبويب الأول: ربط ونشر أي ملف لعبة أو منصة -->
+    <section id="tab-injector" class="panel">
+      <div class="card">
+        <h2>ارفع ملفّ اللعبة أو المنصّة (HTML) للربط بفايربيس والنشر التلقائيّ</h2>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('htmlFileInput').click()">
+          <div class="drop-icon">📤</div>
+          <h3 style="margin:0 0 6px; color:var(--primary-dark); font-size:17px;">اضغط هنا لاختيار ملفّ اللعبة أو المنصّة، أو اسحبه وأفلته هنا</h3>
+          <p style="margin:0; color:var(--muted); font-size:13px;">يفحص البصمة الرقميّة لمنع التكرار، ويربط الملفّ بفايربيس وينشره على الاستضافة تلقائيًّا</p>
+          <input type="file" id="htmlFileInput" accept=".html,.htm" style="display:none;" onchange="handleFileSelect(event)">
+        </div>
+
+        <!-- تنبيه منع التكرار عند اكتشاف ملف مربوط مسبقًا -->
+        <div id="duplicateWarningBox" class="dup-alert" style="display:none;">
+          <h4>⚠️ تنبيه منع التكرار: هذا الملفّ مدمجٌ ومربوطٌ مسبقًا في قاعدة البيانات!</h4>
+          <p id="duplicateDetailsText"></p>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="btn btn-warning btn-sm" onclick="injectAndDeploy(true)">🔄 تحديث النسخة السابقة نفسها دون تكرار</button>
+            <button class="btn btn-primary btn-sm" id="dupShowQrBtn">📱 عرض الباركود ونسخ الرابط السابق</button>
+            <button class="btn btn-outline btn-sm" onclick="bypassDuplicateCheck()">➕ اعتماده كمشروعٍ مستقلٍّ جديدٍ</button>
+          </div>
+        </div>
+
+        <div id="scanPreviewArea" style="display:none;">
+          <div class="scan-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <strong style="color:var(--primary-dark); font-size:15px;" id="scannedFileName">اسم الملفّ</strong>
+              <button class="btn btn-sm btn-outline" onclick="resetUpload()">إلغاء واختيار ملفّ آخر</button>
+            </div>
+            <div class="scan-badges" id="scanBadges"></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>اسم اللعبة أو المنصّة (يظهر في التقرير وعلى بطاقة الباركود):</label>
+              <input type="text" id="injProjTitle" oninput="autoSlugInj()">
+            </div>
+            <div class="form-group">
+              <label>المعرّف السحابيّ ومسار الرابط (<span dir="ltr">slug</span>):</label>
+              <input type="text" id="injProjSlug" style="direction:ltr; text-align:left;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>رابط النشر على الاستضافة (يُملأ تلقائيًّا عند تفعيل Cloudflare Pages أو يُكتب يدويًّا):</label>
+            <input type="text" id="injLiveUrl" placeholder="https://emad-games.pages.dev/game-name/" style="direction:ltr; text-align:left;">
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:8px;">
+            <button class="btn btn-accent" id="btnRunInjectDeploy" style="font-size:15px; padding:13px 24px;" onclick="injectAndDeploy(false)">
+              ⚡ تنفيذ الربط السحابيّ والنشر وتوليد الباركود فورًا
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- التبويب الثاني: التقرير الشامل والباركود -->
+    <section id="tab-report" class="panel">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+          <h2 style="margin:0; border:none; padding:0;">التقرير الشامل للألعاب والمنصّات المدمجة في قاعدة البيانات</h2>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="refreshProjects()">🔄 تحديث السجلّ</button>
+            <button class="btn btn-primary btn-sm" onclick="exportReportCSV()">📥 تصدير التقرير (Excel / CSV)</button>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="num" id="statTotal">0</div>
+            <div class="lbl">إجماليّ الألعاب والمنصّات المربوطة</div>
+          </div>
+          <div class="stat-card">
+            <div class="num" id="statPublished" style="color:var(--accent);">0</div>
+            <div class="lbl">منشورة برابطٍ مباشرٍ للطلّاب</div>
+          </div>
+          <div class="stat-card">
+            <div class="num" id="statProtected" style="color:var(--success);">0</div>
+            <div class="lbl">محميّة ببصمة منع التكرار</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <input type="text" id="reportSearchInput" placeholder="🔍 ابحث باسم اللعبة أو المعرّف البرمجيّ..." oninput="renderReportTable()">
+        </div>
+
+        <div class="table-wrap" id="reportPrintableArea">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>م</th>
+                <th>اسم اللعبة / المنصّة</th>
+                <th>نوع الربط</th>
+                <th>المسار والبصمة</th>
+                <th>تاريخ الربط</th>
+                <th>رابط الطلّاب والباركود</th>
+                <th>إدارة</th>
+              </tr>
+            </thead>
+            <tbody id="reportTableBody"><tr><td colspan="7" style="text-align:center; color:var(--danger);">تعذّر جلب التقرير من السحابة. تحقّق من قواعد القراءة في Firebase.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- التبويب الثالث: مولّد القوالب الجديدة -->
+    <section id="tab-generator" class="panel">
+      <div class="card">
+        <h2>إنشاء قالب مشروعٍ جديدٍ فارغٍ مربوطٍ بالسحابة</h2>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>اسم المشروع أو اللعبة (بالعربيّة):</label>
+            <input type="text" id="newProjTitle" placeholder="مثال: مسابقة فرسان الضاد" oninput="autoSlugGen()">
+          </div>
+          <div class="form-group">
+            <label>المعرّف البرمجيّ للمسار:</label>
+            <input type="text" id="newProjSlug" placeholder="مثال: fursan_aldad" style="direction:ltr; text-align:left;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>وصف مختصر للمشروع (اختياريّ):</label>
+          <input type="text" id="newProjDesc" placeholder="مثال: لعبة تفاعليّة لمراجعة قواعد النحو">
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+          <button class="btn btn-accent" onclick="createAndDownloadProject()">🚀 إنشاء وتوليد ملفّ HTML الجاهز فورًا</button>
+          <button class="btn btn-outline" onclick="copyBridgeOnly()">📋 نسخ كود الربط السحابيّ فقط</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- التبويب الرابع: البيانات المشتركة -->
+    <section id="tab-shared" class="panel">
+      <div class="card">
+        <h2>البيانات المشتركة للتطبيقات والشهادات</h2>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>اسم المدرسة:</label>
+            <input type="text" id="shSchool" placeholder="أدخل اسم المدرسة">
+          </div>
+          <div class="form-group">
+            <label>اسم معلّم المادّة:</label>
+            <input type="text" id="shTeacher" value="أ. عماد سعيد محمّد">
+          </div>
+          <div class="form-group">
+            <label>اسم مدير المدرسة:</label>
+            <input type="text" id="shPrincipal" placeholder="أدخل اسم مدير المدرسة">
+          </div>
+          <div class="form-group">
+            <label>رابط صورة الختم الرسميّ (اختياريّ):</label>
+            <input type="text" id="shStamp" placeholder="https://..." style="direction:ltr; text-align:left;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>قائمة الطلّاب المشتركة (كلّ طالبٍ في سطرٍ مستقلٍّ):</label>
+          <textarea id="shStudents" rows="5" placeholder="أحمد محمّد العتيبي
+سلمان خالد القحطاني
+عبدالرحمن سعد الشهري"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveSharedData()">💾 حفظ البيانات المشتركة في السحابة</button>
+      </div>
+    </section>
+
+    <!-- التبويب الخامس: الاستضافة والحماية -->
+    <section id="tab-settings" class="panel active">
+      <div class="card">
+        <h2>🚀 إعداد النشر التلقائيّ على استضافة Cloudflare Pages (يُضبط مرّةً واحدةً فقط)</h2>
+        <p style="font-size:13px; color:var(--muted); line-height:1.8; margin-top:0;">
+          عند ربط مستودع GitHub بمشروعك في <strong>Cloudflare Pages</strong> وإدخال البيانات أدناه مرّةً واحدةً، سيقوم النظام تلقائيًّا برفع كلّ لعبةٍ تربطها ونشرها على الإنترنت واستخراج رابطها والباركود بضغطة زرٍّ دون دخولك إلى موقع الاستضافة نهائيًّا:
+        </p>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>رابط مشروعك الأساسيّ في Cloudflare Pages:</label>
+            <input type="text" id="cfBaseUrl" placeholder="https://emad-games.pages.dev" style="direction:ltr; text-align:left;">
+          </div>
+          <div class="form-group">
+            <label>اسم حسابك في GitHub (<span dir="ltr">Username</span>):</label>
+            <input type="text" id="ghOwner" placeholder="مثال: emad-103" style="direction:ltr; text-align:left;">
+          </div>
+          <div class="form-group">
+            <label>اسم المستودع المربوط بالاستضافة (<span dir="ltr">Repository</span>):</label>
+            <input type="text" id="ghRepo" placeholder="مثال: emad-games" style="direction:ltr; text-align:left;">
+          </div>
+          <div class="form-group">
+            <label>رمز الوصول الشخصيّ (<span dir="ltr">GitHub Token</span> - يُحفظ محلّيًّا بأمان):</label>
+            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="direction:ltr; text-align:left;">
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="btn btn-accent" onclick="saveHostingConfig()">💾 حفظ إعدادات الاستضافة والنشر التلقائيّ</button>
+          <button class="btn btn-outline" id="btnDeploySelf" onclick="deploySelfToCloudflare()" disabled="">⏳ جارٍ نشر الأداة على الاستضافة...</button>
+        </div>
+        <div id="selfLiveUrlBox" style="display:none; margin-top:14px; padding:12px; background:#f0fdfa; border:1px solid #99f6e4; border-radius:10px; font-size:13px;">
+          <strong>رابط الأداة المباشر على استضافتك:</strong>
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px;">
+            <span class="code-pill" id="selfLiveUrlText"></span>
+            <button class="btn btn-primary btn-sm" onclick="copySelfUrl()">📋 نسخ رابط الأداة</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🔐 تغيير الرقم السرّيّ للوحة التحكّم والصوت</h2>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>الرقم السرّيّ الجديد:</label>
+            <input type="password" id="newPinInput" placeholder="أدخل الرقم السرّيّ الجديد">
+          </div>
+          <div class="form-group" style="display:flex; align-items:flex-end; gap:10px;">
+            <button class="btn btn-primary" onclick="changePin()">تحديث الرقم السرّيّ</button>
+            <button class="btn btn-outline" id="soundToggleBtn" onclick="toggleSound()">🔊 الصوت: مفعّل</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- نافذة عرض وتحميل الباركود الاحترافي باسم اللعبة -->
+  <div class="modal-backdrop" id="qrModal" onclick="if(event.target===this) closeQrModal()">
+    <div class="modal-box">
+      <div class="qr-poster" id="qrPosterCard">
+        <div class="qr-poster-header">منصّة التعلّم التفاعليّ الذكيّ</div>
+        <h3 class="qr-poster-title" id="qrPosterTitle">اسم اللعبة</h3>
+        <div id="qrCanvasBox"></div>
+        <div class="qr-poster-hint">📱 امسح الرمز بكاميرا الجوّال لبدء التحدّي مباشرةً</div>
+        <div class="qr-poster-url" id="qrPosterUrl">https://...</div>
+        <div class="qr-poster-footer">إعداد وتطوير: أ. عماد سعيد محمّد | 0507825450</div>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
+        <button class="btn btn-accent btn-sm" onclick="downloadQrPoster()">🖼️ تحميل البطاقة كصورة PNG</button>
+        <button class="btn btn-primary btn-sm" onclick="copyModalUrl()">📋 نسخ الرابط</button>
+        <button class="btn btn-outline btn-sm" onclick="closeQrModal()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    جميع الحقوق محفوظة © 2026 | تصميم وتطوير: <strong>أ. عماد سعيد محمّد</strong> — جوال: <strong>0507825450</strong>
+  </footer>
+
+  <div id="toast" class="show">تمّ حفظ إعدادات النشر التلقائيّ على Cloudflare Pages بنجاح.</div>
+
+  <script>
+    const DB_BASE = "https://emad-smart-planner-default-rtdb.firebaseio.com";
+    const NEW_FIREBASE_CONFIG_TEXT = `const firebaseConfig = {
+            apiKey: "AIzaSyAzkXVYnjgZQHLQP497Kqwx9De50ehoZqQ",
+            authDomain: "emad-smart-planner.firebaseapp.com",
+            databaseURL: "https://emad-smart-planner-default-rtdb.firebaseio.com",
+            projectId: "emad-smart-planner",
+            storageBucket: "emad-smart-planner.firebasestorage.app",
+            messagingSenderId: "310620202152",
+            appId: "1:310620202152:web:1b7f31da51b5fd8ce8ce9d"
+        };`;
+
+    let soundEnabled = localStorage.getItem("emad_sound") !== "off";
+    let currentPin = localStorage.getItem("emad_admin_pin") || "2026";
+    let cachedApps = {};
+    let uploadedRawHtml = "";
+    let uploadedOriginalName = "";
+    let currentFingerprint = "";
+    let matchedExistingSlug = "";
+    let currentModalUrl = "";
+    let currentModalTitle = "";
+
+    let detectedFeatures = {
+      hasRestFirebase: false,
+      hasModularFirebase: false,
+      hasLocalStorage: false,
+      embeddedSlug: ""
+    };
+
+    // حماية أساسيّة ضدّ النقر الأيمن واختصارات الفحص
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === "U")) {
+        e.preventDefault();
+      }
+    });
+
+    async function fbRest(path, method = "GET", data = null) {
+      const opts = { method, headers: { "Content-Type": "application/json" } };
+      if (data !== null) opts.body = JSON.stringify(data);
+      const res = await fetch(`${DB_BASE}/${path}.json`, opts);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    }
+
+    function playTone(type = "click") {
+      if (!soundEnabled) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        if (type === "success") {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else if (type === "error") {
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.25);
+        } else {
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          gain.gain.setValueAtTime(0.06, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.08);
+        }
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3600);
+    }
+
+    async function checkCloudConnection() {
+      const dot = document.getElementById("connDot");
+      const txt = document.getElementById("connText");
+      try {
+        const pinVal = await fbRest("shared_data/admin_config/pin");
+        if (pinVal) {
+          currentPin = String(pinVal);
+          localStorage.setItem("emad_admin_pin", currentPin);
+        }
+        dot.classList.add("online");
+        txt.textContent = "متّصل بالسحابة بنجاح";
+      } catch (e) {
+        dot.classList.remove("online");
+        txt.textContent = "غير متّصل بالشبكة";
+      }
+    }
+    checkCloudConnection();
+
+    function unlockSystem() {
+      const val = document.getElementById("pinInput").value.trim();
+      if (val === currentPin) {
+        playTone("success");
+        document.getElementById("lockScreen").style.display = "none";
+        document.getElementById("pinInput").value = "";
+        loadHostingConfig();
+        loadSharedData();
+        refreshProjects();
+      } else {
+        playTone("error");
+        showToast("الرقم السرّيّ غير صحيح، حاول مرّةً أخرى.");
+      }
+    }
+
+    document.getElementById("pinInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") unlockSystem();
+    });
+
+    function lockNow() {
+      playTone("click");
+      document.getElementById("lockScreen").style.display = "flex";
+    }
+
+    function switchTab(tabName, btn) {
+      playTone("click");
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("tab-" + tabName).classList.add("active");
+    }
+
+    const arMap = {
+      "أ":"a","إ":"i","آ":"a","ا":"a","ب":"b","ت":"t","ث":"th","ج":"j","ح":"h","خ":"kh",
+      "د":"d","ذ":"dh","ر":"r","ز":"z","س":"s","ش":"sh","ص":"s","ض":"d","ط":"t","ظ":"z",
+      "ع":"a","غ":"gh","ف":"f","ق":"q","ك":"k","ل":"l","م":"m","ن":"n","ه":"h","ة":"h",
+      "و":"w","ؤ":"w","ي":"y","ى":"a","ئ":"y"
+    };
+
+    function textToSlug(title) {
+      let slug = "";
+      for (const ch of title) {
+        if (arMap[ch]) slug += arMap[ch];
+        else if (/[a-zA-Z0-9]/.test(ch)) slug += ch.toLowerCase();
+        else if (ch === " " || ch === "-" || ch === "_") slug += "_";
+      }
+      slug = slug.replace(/_+/g, "_").replace(/^_|_$/g, "");
+      if (!slug && title.length > 0) slug = "app_" + Date.now().toString().slice(-5);
+      return slug.slice(0, 36);
+    }
+
+    function normalizeCfBase() {
+      let base = (document.getElementById("cfBaseUrl").value || localStorage.getItem("emad_cf_base") || "").trim().replace(/\/+$/, "");
+      if (base && !/^https?:\/\//i.test(base)) base = "https://" + base;
+      return base;
+    }
+
+    function getExpectedLiveUrl(slug) {
+      const base = normalizeCfBase();
+      return base ? `${base}/${slug}/` : "";
+    }
+
+    function autoSlugInj() {
+      const slug = textToSlug(document.getElementById("injProjTitle").value.trim());
+      document.getElementById("injProjSlug").value = slug;
+      document.getElementById("injLiveUrl").value = getExpectedLiveUrl(slug);
+    }
+
+    function autoSlugGen() {
+      document.getElementById("newProjSlug").value = textToSlug(document.getElementById("newProjTitle").value.trim());
+    }
+
+    // حساب البصمة الرقميّة النظيفة لمنع التكرار حتى عند إعادة تسمية الملف
+    async function computeCleanFingerprint(rawHtml) {
+      let cleaned = String(rawHtml || "")
+        .replace(/<meta\s+name=["']emad-cloud-signature["'][^>]*>\s*/gi, "")
+        .replace(/<script\s+id=["']emad-cloud-auto-bridge["']>[\s\S]*?<\/script>\s*/gi, "")
+        .replace(/\r\n/g, "\n")
+        .trim();
+      const buf = new TextEncoder().encode(cleaned);
+      const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+      return Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    const dropZone = document.getElementById("dropZone");
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processUploadedHtmlFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function handleFileSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        processUploadedHtmlFile(e.target.files[0]);
+      }
+    }
+
+    function processUploadedHtmlFile(file) {
+      if (!/\.html?$/i.test(file.name)) {
+        playTone("error");
+        showToast("يرجى اختيار ملفٍّ بصيغة HTML فقط.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async () => {
+        uploadedRawHtml = String(reader.result || "");
+        uploadedOriginalName = file.name;
+        matchedExistingSlug = "";
+        document.getElementById("duplicateWarningBox").style.display = "none";
+
+        currentFingerprint = await computeCleanFingerprint(uploadedRawHtml);
+
+        const sigMatch = uploadedRawHtml.match(/<meta\s+name=["']emad-cloud-signature["'][^>]*data-slug=["']([^"']+)["']/i);
+        const embeddedSlug = sigMatch ? sigMatch[1] : "";
+
+        const titleMatch = uploadedRawHtml.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        const extractedTitle = titleMatch
+          ? titleMatch[1].replace(/\s+/g, " ").trim().replace(/-?\s*أ\.\s*عماد\s*سعيد\s*محمّد/g, "").split("—")[0].split("|")[0].trim()
+          : file.name.replace(/\.html?$/i, "");
+
+        detectedFeatures = {
+          hasRestFirebase: /firebaseUrl\s*:/.test(uploadedRawHtml) && /fbRequest/.test(uploadedRawHtml),
+          hasModularFirebase: /const\s+firebaseConfig\s*=\s*\{[\s\S]*?\}\s*;/.test(uploadedRawHtml) && /getDatabase\s*\(/.test(uploadedRawHtml),
+          hasLocalStorage: /localStorage/.test(uploadedRawHtml),
+          embeddedSlug
+        };
+
+        let foundMeta = null;
+        for (const key of Object.keys(cachedApps)) {
+          const m = cachedApps[key]?._meta;
+          if (!m) continue;
+          if ((m.fingerprint && m.fingerprint === currentFingerprint) || (embeddedSlug && key === embeddedSlug)) {
+            matchedExistingSlug = key;
+            foundMeta = m;
+            break;
+          }
+        }
+
+        const slug = matchedExistingSlug || textToSlug(extractedTitle);
+        document.getElementById("scannedFileName").textContent = `📄 الملفّ: ${file.name} (${Math.round(file.size / 1024)} كيلوبايت) — البصمة: ${currentFingerprint.slice(0, 12)}`;
+        document.getElementById("injProjTitle").value = foundMeta?.title || extractedTitle;
+        document.getElementById("injProjSlug").value = slug;
+        document.getElementById("injLiveUrl").value = foundMeta?.liveUrl || getExpectedLiveUrl(slug);
+
+        const badges = [];
+        if (detectedFeatures.hasModularFirebase) {
+          badges.push(`<span class="badge-tag purple">✓ منصّة تحدٍّ صفّيّ (ربط SDK ومشاركة الفصول)</span>`);
+        } else if (detectedFeatures.hasRestFirebase) {
+          badges.push(`<span class="badge-tag smart">✓ منصّة تعلّم ذكيّ (ربط مباشر متكامل)</span>`);
+        } else if (detectedFeatures.hasLocalStorage) {
+          badges.push(`<span class="badge-tag">✓ لعبة تفاعليّة (مزامنة تلقائيّة للبيانات)</span>`);
+        } else {
+          badges.push(`<span class="badge-tag">✓ جاهز للربط السحابيّ والنشر</span>`);
+        }
+        badges.push(`<span class="badge-tag smart">🛡️ محميٌّ ببصمة SHA-256 ضدّ التكرار</span>`);
+        document.getElementById("scanBadges").innerHTML = badges.join("");
+
+        if (matchedExistingSlug && foundMeta) {
+          const existingUrl = foundMeta.liveUrl || `${DB_BASE}/apps/${matchedExistingSlug}`;
+          document.getElementById("duplicateDetailsText").innerHTML =
+            `اسم المشروع المسجّل: <strong>${foundMeta.title}</strong> | المسار: <span class="code-pill">apps/${matchedExistingSlug}</span> | تاريخ الربط: <strong>${foundMeta.createdAt || "سابقًا"}</strong>`;
+          document.getElementById("dupShowQrBtn").onclick = () => openQrModal(foundMeta.title, existingUrl);
+          document.getElementById("duplicateWarningBox").style.display = "block";
+          document.getElementById("scanPreviewArea").style.display = "none";
+          playTone("error");
+        } else {
+          document.getElementById("scanPreviewArea").style.display = "block";
+          playTone("success");
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    }
+
+    function bypassDuplicateCheck() {
+      matchedExistingSlug = "";
+      const newSlug = document.getElementById("injProjSlug").value + "_" + Date.now().toString().slice(-3);
+      document.getElementById("injProjSlug").value = newSlug;
+      document.getElementById("injLiveUrl").value = getExpectedLiveUrl(newSlug);
+      document.getElementById("duplicateWarningBox").style.display = "none";
+      document.getElementById("scanPreviewArea").style.display = "block";
+    }
+
+    function resetUpload() {
+      uploadedRawHtml = "";
+      uploadedOriginalName = "";
+      currentFingerprint = "";
+      matchedExistingSlug = "";
+      document.getElementById("htmlFileInput").value = "";
+      document.getElementById("scanPreviewArea").style.display = "none";
+      document.getElementById("duplicateWarningBox").style.display = "none";
+    }
+
+    function buildAutoBridgeScript(slug, modeType, fingerprint) {
+      const appUrl = `${DB_BASE}/apps/${slug}`;
+      return `<meta name="emad-cloud-signature" data-slug="${slug}" data-fp="${fingerprint}" content="emad-said-mohamed-0507825450" />
+  <script id="emad-cloud-auto-bridge">
+(function(){
+  var DB_BASE = ${JSON.stringify(DB_BASE)};
+  var APP_ID = ${JSON.stringify(slug)};
+  var APP_URL = ${JSON.stringify(appUrl)};
+  var MODE_TYPE = ${JSON.stringify(modeType)};
+
+  window.__EMAD_CLOUD_CONFIG__ = { dbBase: DB_BASE, appId: APP_ID, appUrl: APP_URL, mode: MODE_TYPE, fp: ${JSON.stringify(fingerprint)} };
+
+  if (MODE_TYPE === "rest_platform") {
+    try {
+      var sKey = "edu.settings.v4";
+      var rawS = localStorage.getItem(sKey);
+      var parsedS = rawS ? JSON.parse(rawS) : {};
+      if (!parsedS.firebaseUrl) {
+        parsedS.firebaseUrl = APP_URL;
+        localStorage.setItem(sKey, JSON.stringify(parsedS));
+      }
+    } catch (e) {}
+  }
+
+  window.CloudDB = {
+    save: function(subPath, data) {
+      return fetch(APP_URL + "/data/" + subPath + ".json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+    },
+    load: function(subPath) {
+      return fetch(APP_URL + "/data" + (subPath ? "/" + subPath : "") + ".json").then(function(r){ return r.json(); });
+    },
+    getShared: function() {
+      return fetch(DB_BASE + "/shared_data.json").then(function(r){ return r.json(); });
+    }
+  };
+
+  if (MODE_TYPE === "local_sync") {
+    var syncTimer = null;
+    var isHydrating = false;
+    var origSetItem = Storage.prototype.setItem;
+    var origRemoveItem = Storage.prototype.removeItem;
+
+    function pushLocalSnapshot() {
+      if (isHydrating) return;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(function() {
+        var snapshot = {};
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf("emad_") !== 0) {
+            snapshot[k] = localStorage.getItem(k);
+          }
+        }
+        fetch(APP_URL + "/local_state.json", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ updatedAt: Date.now(), keys: snapshot })
+        }).catch(function(){});
+      }, 700);
+    }
+
+    Storage.prototype.setItem = function(k, v) {
+      origSetItem.apply(this, arguments);
+      if (this === window.localStorage) pushLocalSnapshot();
+    };
+    Storage.prototype.removeItem = function(k) {
+      origRemoveItem.apply(this, arguments);
+      if (this === window.localStorage) pushLocalSnapshot();
+    };
+
+    fetch(APP_URL + "/local_state.json")
+      .then(function(r){ return r.json(); })
+      .then(function(remote) {
+        if (remote && remote.keys && typeof remote.keys === "object") {
+          var changed = false;
+          isHydrating = true;
+          Object.keys(remote.keys).forEach(function(k) {
+            if (localStorage.getItem(k) !== remote.keys[k]) {
+              origSetItem.call(localStorage, k, remote.keys[k]);
+              changed = true;
+            }
+          });
+          isHydrating = false;
+          if (changed && !sessionStorage.getItem("emad_hydrated_" + APP_ID)) {
+            sessionStorage.setItem("emad_hydrated_" + APP_ID, "1");
+            location.reload();
+          }
+        }
+      }).catch(function(){});
+  }
+
+  window.addEventListener("DOMContentLoaded", function() {
+    var pill = document.createElement("div");
+    pill.className = "no-print";
+    pill.style.cssText = "position:fixed;bottom:14px;right:14px;z-index:9998;background:rgba(15,76,129,0.92);color:#fff;padding:5px 12px;border-radius:999px;font-family:Tajawal,Segoe UI,sans-serif;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;";
+    pill.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;"></span><span>متّصل بالسحابة (' + APP_ID + ')</span>';
+    pill.title = "انقر لإخفاء الشارة";
+    pill.onclick = function(){ pill.style.display = "none"; };
+    document.body.appendChild(pill);
+  });
+})();
+<\/script>`;
+    }
+
+    function utf8ToBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary);
+    }
+
+    async function deployToCloudflareViaGitHub(slug, title, htmlContent) {
+      const owner = (document.getElementById("ghOwner").value || localStorage.getItem("emad_gh_owner") || "").trim();
+      const repo = (document.getElementById("ghRepo").value || localStorage.getItem("emad_gh_repo") || "").trim();
+      const token = (document.getElementById("ghToken").value || localStorage.getItem("emad_gh_token") || "").trim();
+      const cfBase = normalizeCfBase();
+
+      if (!owner || !repo || !token) return null;
+
+      const filePath = `${slug}/index.html`;
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+      const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      };
+
+      let existingSha = null;
+      try {
+        const checkRes = await fetch(apiUrl, { headers });
+        if (checkRes.ok) {
+          const checkJson = await checkRes.json();
+          existingSha = checkJson.sha;
+        }
+      } catch (e) {}
+
+      const body = {
+        message: `نشر وتحديث: ${title} (${slug})`,
+        content: utf8ToBase64(htmlContent)
+      };
+      if (existingSha) body.sha = existingSha;
+
+      const putRes = await fetch(apiUrl, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      if (!putRes.ok) {
+        const errData = await putRes.json().catch(() => ({}));
+        throw new Error(errData.message || "فشل الرفع إلى مستودع الاستضافة");
+      }
+
+      return cfBase ? `${cfBase}/${slug}/` : `https://${repo}.pages.dev/${slug}/`;
+    }
+
+    async function deploySelfToCloudflare() {
+      const btn = document.getElementById("btnDeploySelf");
+      btn.disabled = true;
+      btn.textContent = "⏳ جارٍ نشر الأداة على الاستضافة...";
+      try {
+        saveHostingConfig();
+        let selfHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+        selfHtml = selfHtml.replace(/id="lockScreen"\s+style="[^"]*"/i, 'id="lockScreen"');
+        const url = await deployToCloudflareViaGitHub("manager", "مُدير ومولّد ورابط الأنظمة السحابيّ", selfHtml);
+        if (!url) {
+          playTone("error");
+          showToast("يرجى إدخال بيانات GitHub والاستضافة أولًا ثمّ المحاولة.");
+          return;
+        }
+        localStorage.setItem("emad_self_url", url);
+        document.getElementById("selfLiveUrlText").textContent = url;
+        document.getElementById("selfLiveUrlBox").style.display = "block";
+        playTone("success");
+        showToast("مبارك! تمّ نشر الأداة على استضافتك بنجاح.");
+      } catch (e) {
+        playTone("error");
+        showToast("تعذّر نشر الأداة: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🌐 نشر الأداة نفسها على الإنترنت للحصول على رابط مباشر";
+      }
+    }
+
+    function copySelfUrl() {
+      const u = document.getElementById("selfLiveUrlText").textContent;
+      navigator.clipboard.writeText(u);
+      playTone("success");
+      showToast("تمّ نسخ رابط الأداة المباشر.");
+    }
+
+    async function injectAndDeploy(isUpdatingExisting) {
+      const title = document.getElementById("injProjTitle").value.trim();
+      const slug = (isUpdatingExisting && matchedExistingSlug)
+        ? matchedExistingSlug
+        : document.getElementById("injProjSlug").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      if (!uploadedRawHtml || !title || !slug) {
+        playTone("error");
+        showToast("تأكّد من اختيار الملفّ وكتابة اسم المشروع ومعرّفه.");
+        return;
+      }
+
+      const btn = document.getElementById("btnRunInjectDeploy");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ جارٍ الربط السحابيّ والنشر...";
+      }
+
+      try {
+        const appUrl = `${DB_BASE}/apps/${slug}`;
+        let modifiedHtml = uploadedRawHtml;
+        let modeType = "local_sync";
+        let gameTypeLabel = "لعبة تفاعليّة";
+
+        modifiedHtml = modifiedHtml
+          .replace(/<meta\s+name=["']emad-cloud-signature["'][^>]*>\s*/gi, "")
+          .replace(/<script\s+id=["']emad-cloud-auto-bridge["']>[\s\S]*?<\/script>\s*/gi, "");
+
+        if (detectedFeatures.hasModularFirebase) {
+          modeType = "modular_sdk";
+          gameTypeLabel = "منصّة تحدٍّ صفّيّ";
+          const scopedHelper = `${NEW_FIREBASE_CONFIG_TEXT}
+        const __emadScopedRef = (dbInst, p) => ref(dbInst, /^(School|Settings)(\\/|$)/.test(String(p || "")) ? "shared_data/" + p : "apps/" + (window.__EMAD_CLOUD_CONFIG__ ? window.__EMAD_CLOUD_CONFIG__.appId : ${JSON.stringify(slug)}) + "/" + p);`;
+
+          modifiedHtml = modifiedHtml.replace(/const\s+firebaseConfig\s*=\s*\{[\s\S]*?\}\s*;(?:\s*const\s+__emadScopedRef\s*=[\s\S]*?;)?/, () => scopedHelper);
+          modifiedHtml = modifiedHtml.replace(/\b(?:ref|__emadScopedRef)\s*\(\s*window\.db\s*,/g, "__emadScopedRef(window.db,");
+        } else if (detectedFeatures.hasRestFirebase) {
+          modeType = "rest_platform";
+          gameTypeLabel = "منصّة تعلّم ذكيّ";
+          modifiedHtml = modifiedHtml.replace(/firebaseUrl\s*:\s*['"][^'"]*['"]/, () => `firebaseUrl: '${appUrl}'`);
+        }
+
+        const bridgeTag = buildAutoBridgeScript(slug, modeType, currentFingerprint);
+        if (/<head[^>]*>/i.test(modifiedHtml)) {
+          modifiedHtml = modifiedHtml.replace(/<head[^>]*>/i, (match) => match + "\n  " + bridgeTag);
+        } else {
+          modifiedHtml = bridgeTag + "\n" + modifiedHtml;
+        }
+
+        let liveUrl = document.getElementById("injLiveUrl").value.trim();
+        let autoDeployed = false;
+        try {
+          const deployedUrl = await deployToCloudflareViaGitHub(slug, title, modifiedHtml);
+          if (deployedUrl) {
+            liveUrl = deployedUrl;
+            autoDeployed = true;
+          }
+        } catch (deployErr) {
+          showToast("تمّ الربط بفايربيس، ولكن تعذّر النشر التلقائيّ: " + deployErr.message);
+        }
+
+        await fbRest(`apps/${slug}/_meta`, "PATCH", {
+          title,
+          slug,
+          gameType: gameTypeLabel,
+          fingerprint: currentFingerprint,
+          liveUrl: liveUrl || "",
+          createdAt: new Date().toLocaleDateString("ar-SA"),
+          developer: "عماد سعيد محمّد - 0507825450"
+        });
+
+        const outName = uploadedOriginalName.replace(/\.html?$/i, "") + "-cloud.html";
+        triggerDownload(outName, modifiedHtml);
+
+        document.getElementById("duplicateWarningBox").style.display = "none";
+        document.getElementById("scanPreviewArea").style.display = "block";
+        document.getElementById("injLiveUrl").value = liveUrl;
+
+        playTone("success");
+        showToast(autoDeployed
+          ? "مبارك! تمّ الربط بفايربيس والنشر على Cloudflare Pages وتوليد الباركود."
+          : "مبارك! تمّ ربط الملفّ بفايربيس وتنزيل النسخة المربوطة بنجاح.");
+
+        await refreshProjects();
+        openQrModal(title, liveUrl || appUrl);
+      } catch (err) {
+        playTone("error");
+        showToast("حدث خطأٌ أثناء التسجيل في السحابة.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "⚡ تنفيذ الربط السحابيّ والنشر وتوليد الباركود فورًا";
+        }
+      }
+    }
+
+    function buildStarterHTML(title, slug, desc) {
+      const bridge = buildAutoBridgeScript(slug, "local_sync", "starter_" + slug);
+      return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title} | أ. عماد سعيد محمّد</title>
+  ${bridge}
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 24px; }
+    .container { max-width: 900px; margin: auto; background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    header { border-bottom: 2px solid #0f4c81; padding-bottom: 12px; margin-bottom: 20px; }
+    h1 { margin: 0; color: #0f4c81; font-size: 22px; }
+    footer { text-align: center; margin-top: 30px; font-size: 13px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>${title}</h1>
+      <p style="margin:4px 0 0; color:#64748b; font-size:14px;">${desc || "تطبيق تعليميّ تفاعليّ مربوط بالسحابة"}</p>
+    </header>
+    <div>
+      <p>المسار السحابيّ المخصّص لهذا المشروع: <strong dir="ltr">apps/${slug}</strong></p>
+      <p>المعلّم المشرف: <strong id="teacherNameDisplay">أ. عماد سعيد محمّد</strong></p>
+    </div>
+    <footer>
+      إعداد وتطوير: <strong>أ. عماد سعيد محمّد</strong> — جوال: <strong>0507825450</strong>
+    </footer>
+  </div>
+  <script>
+    window.CloudDB.getShared().then(function(shared) {
+      if (shared && shared.teacher) {
+        document.getElementById("teacherNameDisplay").textContent = shared.teacher;
+      }
+    });
+  <\/script>
+</body>
+</html>`;
+    }
+
+    function triggerDownload(filename, content, mime = "text/html;charset=utf-8") {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function createAndDownloadProject() {
+      const title = document.getElementById("newProjTitle").value.trim();
+      const slug = document.getElementById("newProjSlug").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+      const desc = document.getElementById("newProjDesc").value.trim();
+
+      if (!title || !slug) {
+        playTone("error");
+        showToast("يرجى كتابة اسم المشروع أوّلًا.");
+        return;
+      }
+
+      try {
+        const htmlContent = buildStarterHTML(title, slug, desc);
+        let liveUrl = "";
+        try {
+          const deployed = await deployToCloudflareViaGitHub(slug, title, htmlContent);
+          if (deployed) liveUrl = deployed;
+        } catch (e) {}
+
+        await fbRest(`apps/${slug}/_meta`, "PATCH", {
+          title,
+          slug,
+          gameType: "قالب جديد",
+          fingerprint: "starter_" + slug,
+          liveUrl,
+          createdAt: new Date().toLocaleDateString("ar-SA"),
+          developer: "عماد سعيد محمّد - 0507825450"
+        });
+
+        triggerDownload(slug + ".html", htmlContent);
+        playTone("success");
+        showToast("مبارك! تمّ إنشاء المشروع وتسجيله في التقرير الشامل.");
+        document.getElementById("newProjTitle").value = "";
+        document.getElementById("newProjSlug").value = "";
+        document.getElementById("newProjDesc").value = "";
+        refreshProjects();
+      } catch (err) {
+        playTone("error");
+        showToast("تعذّر التسجيل في السحابة، تحقّق من اتّصالك بالإنترنت.");
+      }
+    }
+
+    function copyBridgeOnly() {
+      const slug = document.getElementById("newProjSlug").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_") || "project_1";
+      navigator.clipboard.writeText(buildAutoBridgeScript(slug, "local_sync", "manual_" + slug));
+      playTone("success");
+      showToast("تمّ نسخ جسر الربط السحابيّ للمسار: apps/" + slug);
+    }
+
+    async function refreshProjects() {
+      try {
+        const data = await fbRest("apps");
+        cachedApps = data || {};
+        const keys = Object.keys(cachedApps);
+        document.getElementById("projCount").textContent = keys.length;
+        document.getElementById("statTotal").textContent = keys.length;
+
+        let publishedCount = 0;
+        let protectedCount = 0;
+        keys.forEach((k) => {
+          const m = cachedApps[k]?._meta || {};
+          if (m.liveUrl) publishedCount++;
+          if (m.fingerprint) protectedCount++;
+        });
+        document.getElementById("statPublished").textContent = publishedCount;
+        document.getElementById("statProtected").textContent = protectedCount;
+
+        renderReportTable();
+      } catch (e) {
+        document.getElementById("reportTableBody").innerHTML =
+          `<tr><td colspan="7" style="text-align:center; color:var(--danger);">تعذّر جلب التقرير من السحابة. تحقّق من قواعد القراءة في Firebase.</td></tr>`;
+      }
+    }
+
+    function renderReportTable() {
+      const tbody = document.getElementById("reportTableBody");
+      const query = (document.getElementById("reportSearchInput").value || "").trim().toLowerCase();
+      const keys = Object.keys(cachedApps).filter((k) => {
+        const m = cachedApps[k]?._meta || {};
+        const t = (m.title || k).toLowerCase();
+        return !query || t.includes(query) || k.toLowerCase().includes(query);
+      });
+
+      if (keys.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted);">لا توجد ألعابٌ أو منصّاتٌ مطابقةٌ في السجلّ.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = keys.map((key, idx) => {
+        const item = cachedApps[key] || {};
+        const meta = item._meta || {};
+        const title = meta.title || key;
+        const gType = meta.gameType || "تطبيق سحابيّ";
+        const fpShort = meta.fingerprint ? meta.fingerprint.slice(0, 10) : "—";
+        const created = meta.createdAt || "—";
+        const hasLive = Boolean(meta.liveUrl);
+
+        return `
+          <tr>
+            <td><strong>${idx + 1}</strong></td>
+            <td>
+              <strong style="color:var(--primary-dark); font-size:14px;">${title}</strong>
+              <div style="margin-top:4px;">
+                ${hasLive
+                  ? `<span class="badge-tag smart">منشور للطلّاب ✓</span>`
+                  : `<span class="badge-tag warn">مربوط بفايربيس (بانتظار رابط الاستضافة)</span>`}
+              </div>
+            </td>
+            <td>${gType}</td>
+            <td>
+              <div><span class="code-pill">apps/${key}</span></div>
+              <div style="font-size:11px; color:var(--muted); margin-top:3px;">البصمة: ${fpShort}</div>
+            </td>
+            <td>${created}</td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <button class="btn btn-primary btn-sm" onclick="copyStudentLink('${key}')">📋 نسخ الرابط</button>
+                <button class="btn btn-accent btn-sm" onclick="openProjectQr('${key}')">📱 باركود باسم اللعبة</button>
+                <button class="btn btn-outline btn-sm" onclick="editProjectUrl('${key}')">✏️ تعديل الرابط</button>
+              </div>
+            </td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <button class="btn btn-outline btn-sm" onclick="backupProject('${key}')" title="نسخة احتياطيّة للبيانات">📦</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteProject('${key}')" title="حذف المشروع">🗑</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function copyStudentLink(slug) {
+      const meta = cachedApps[slug]?._meta || {};
+      const url = meta.liveUrl || `${DB_BASE}/apps/${slug}`;
+      navigator.clipboard.writeText(url);
+      playTone("success");
+      showToast("تمّ نسخ رابط اللعبة لإرساله للطلّاب: " + url);
+    }
+
+    function openProjectQr(slug) {
+      const meta = cachedApps[slug]?._meta || {};
+      const title = meta.title || slug;
+      const url = meta.liveUrl || `${DB_BASE}/apps/${slug}`;
+      openQrModal(title, url);
+    }
+
+    async function editProjectUrl(slug) {
+      const meta = cachedApps[slug]?._meta || {};
+      const current = meta.liveUrl || getExpectedLiveUrl(slug);
+      const updated = prompt("أدخل أو عدّل رابط اللعبة المباشر على الاستضافة:", current);
+      if (updated === null) return;
+      try {
+        await fbRest(`apps/${slug}/_meta`, "PATCH", { liveUrl: updated.trim() });
+        playTone("success");
+        showToast("تمّ تحديث رابط اللعبة في التقرير والباركود.");
+        refreshProjects();
+      } catch (e) {
+        playTone("error");
+        showToast("تعذّر تحديث الرابط.");
+      }
+    }
+
+    function openQrModal(title, url) {
+      currentModalTitle = title;
+      currentModalUrl = url;
+      document.getElementById("qrPosterTitle").textContent = title;
+      document.getElementById("qrPosterUrl").textContent = url;
+
+      const box = document.getElementById("qrCanvasBox");
+      box.innerHTML = "";
+      if (typeof QRCode !== "undefined") {
+        new QRCode(box, {
+          text: url,
+          width: 176,
+          height: 176,
+          colorDark: "#093256",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } else {
+        box.innerHTML = `<span style="font-size:12px; color:var(--muted);">تعذّر تحميل مكتبة الباركود دون إنترنت</span>`;
+      }
+
+      document.getElementById("qrModal").style.display = "flex";
+    }
+
+    function closeQrModal() {
+      document.getElementById("qrModal").style.display = "none";
+    }
+
+    function copyModalUrl() {
+      navigator.clipboard.writeText(currentModalUrl);
+      playTone("success");
+      showToast("تمّ نسخ رابط اللعبة بنجاح.");
+    }
+
+    async function downloadQrPoster() {
+      const card = document.getElementById("qrPosterCard");
+      if (typeof html2canvas === "undefined") {
+        showToast("مكتبة تصدير الصور غير متاحة حاليًّا.");
+        return;
+      }
+      try {
+        const canvas = await html2canvas(card, { scale: 3, backgroundColor: "#ffffff" });
+        const link = document.createElement("a");
+        const safeTitle = currentModalTitle.replace(/[\\/:*?"<>|]/g, "_");
+        link.download = `باركود-${safeTitle}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        playTone("success");
+        showToast("تمّ تحميل بطاقة الباركود باسم اللعبة بدقّةٍ عاليةٍ.");
+      } catch (e) {
+        playTone("error");
+        showToast("حدث خطأٌ أثناء تصدير الصورة.");
+      }
+    }
+
+    function exportReportCSV() {
+      const keys = Object.keys(cachedApps);
+      if (keys.length === 0) {
+        showToast("لا توجد بياناتٌ لتصديرها.");
+        return;
+      }
+      const rows = [["م", "اسم اللعبة / المنصّة", "نوع الربط", "المسار السحابيّ", "البصمة الرقميّة", "تاريخ الربط", "رابط الطلّاب المباشر"]];
+      keys.forEach((k, i) => {
+        const m = cachedApps[k]?._meta || {};
+        rows.push([
+          i + 1,
+          `"${(m.title || k).replace(/"/g, '""')}"`,
+          `"${m.gameType || ""}"`,
+          `"apps/${k}"`,
+          `"${m.fingerprint || ""}"`,
+          `"${m.createdAt || ""}"`,
+          `"${m.liveUrl || DB_BASE + "/apps/" + k}"`
+        ]);
+      });
+      const csvContent = "\uFEFF" + rows.map((r) => r.join(",")).join("\n");
+      triggerDownload("تقرير-الألعاب-والمنصّات-المربوطة.csv", csvContent, "text/csv;charset=utf-8");
+      playTone("success");
+      showToast("تمّ تصدير التقرير الشامل بنجاح.");
+    }
+
+    function backupProject(slug) {
+      const data = cachedApps[slug] || {};
+      triggerDownload(slug + "-backup.json", JSON.stringify(data, null, 2), "application/json;charset=utf-8");
+      playTone("success");
+      showToast("تمّ تصدير النسخة الاحتياطيّة بصيغة JSON.");
+    }
+
+    async function deleteProject(slug) {
+      if (!confirm("هل أنت متأكّدٌ من حذف بيانات المشروع (" + slug + ") نهائيًّا من السحابة؟")) return;
+      try {
+        await fbRest(`apps/${slug}`, "DELETE");
+        playTone("success");
+        showToast("تمّ حذف المشروع من قاعدة البيانات.");
+        refreshProjects();
+      } catch (e) {
+        playTone("error");
+        showToast("تعذّر حذف المشروع.");
+      }
+    }
+
+    function loadHostingConfig() {
+      document.getElementById("cfBaseUrl").value = localStorage.getItem("emad_cf_base") || "";
+      document.getElementById("ghOwner").value = localStorage.getItem("emad_gh_owner") || "";
+      document.getElementById("ghRepo").value = localStorage.getItem("emad_gh_repo") || "";
+      document.getElementById("ghToken").value = localStorage.getItem("emad_gh_token") || "";
+      const savedSelf = localStorage.getItem("emad_self_url");
+      if (savedSelf) {
+        document.getElementById("selfLiveUrlText").textContent = savedSelf;
+        document.getElementById("selfLiveUrlBox").style.display = "block";
+      }
+    }
+
+    function saveHostingConfig() {
+      let base = document.getElementById("cfBaseUrl").value.trim().replace(/\/+$/, "");
+      if (base && !/^https?:\/\//i.test(base)) base = "https://" + base;
+      document.getElementById("cfBaseUrl").value = base;
+      localStorage.setItem("emad_cf_base", base);
+      localStorage.setItem("emad_gh_owner", document.getElementById("ghOwner").value.trim());
+      localStorage.setItem("emad_gh_repo", document.getElementById("ghRepo").value.trim());
+      localStorage.setItem("emad_gh_token", document.getElementById("ghToken").value.trim());
+      playTone("success");
+      showToast("تمّ حفظ إعدادات النشر التلقائيّ على Cloudflare Pages بنجاح.");
+    }
+
+    async function loadSharedData() {
+      try {
+        const d = await fbRest("shared_data");
+        if (d) {
+          if (d.school) document.getElementById("shSchool").value = d.school;
+          if (d.teacher) document.getElementById("shTeacher").value = d.teacher;
+          if (d.principal) document.getElementById("shPrincipal").value = d.principal;
+          if (d.stamp) document.getElementById("shStamp").value = d.stamp;
+          if (Array.isArray(d.students)) document.getElementById("shStudents").value = d.students.join("\n");
+        }
+      } catch (e) {}
+    }
+
+    async function saveSharedData() {
+      const students = document.getElementById("shStudents").value
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      try {
+        await fbRest("shared_data", "PATCH", {
+          school: document.getElementById("shSchool").value.trim(),
+          teacher: document.getElementById("shTeacher").value.trim(),
+          principal: document.getElementById("shPrincipal").value.trim(),
+          stamp: document.getElementById("shStamp").value.trim(),
+          students
+        });
+        playTone("success");
+        showToast("تمّ حفظ البيانات المشتركة بنجاح.");
+      } catch (e) {
+        playTone("error");
+        showToast("تعذّر حفظ البيانات المشتركة.");
+      }
+    }
+
+    async function changePin() {
+      const np = document.getElementById("newPinInput").value.trim();
+      if (np.length < 4) {
+        playTone("error");
+        showToast("يجب أن يتكوّن الرقم السرّيّ من 4 خاناتٍ على الأقلّ.");
+        return;
+      }
+      try {
+        await fbRest("shared_data/admin_config/pin", "PUT", np);
+        currentPin = np;
+        localStorage.setItem("emad_admin_pin", np);
+        document.getElementById("newPinInput").value = "";
+        playTone("success");
+        showToast("تمّ تحديث الرقم السرّيّ وحفظه في السحابة بنجاح.");
+      } catch (e) {
+        playTone("error");
+        showToast("تعذّر تحديث الرقم السرّيّ.");
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem("emad_sound", soundEnabled ? "on" : "off");
+      document.getElementById("soundToggleBtn").textContent = soundEnabled
+        ? "🔊 الصوت: مفعّل"
+        : "🔇 الصوت: مكتوم";
+      if (soundEnabled) playTone("click");
+    }
+
+    if (!soundEnabled) {
+      document.getElementById("soundToggleBtn").textContent = "🔇 الصوت: مكتوم";
+    }
+  </script>
+
+</body></html>
