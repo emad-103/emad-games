@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta name="emad-cloud-signature" data-slug="mnsh_altalm_aldhky" data-fp="da281885e18349bd9e484652e2f1fe82dfe0109adbeccdadfe4c1307dcf57c5c" content="emad-said-mohamed-0507825450" />
+  <meta name="emad-cloud-signature" data-slug="mnsh_altalm_aldhky" data-fp="a48bc076f39981d4b031433085786fa8a2df41f54924c5074c647b3b9ef8f5a6" content="emad-said-mohamed-0507825450" />
   <script id="emad-cloud-auto-bridge">
 (function(){
   var DB_BASE = "https://emad-smart-planner-default-rtdb.firebaseio.com";
@@ -9,7 +9,7 @@
   var APP_URL = "https://emad-smart-planner-default-rtdb.firebaseio.com/apps/mnsh_altalm_aldhky";
   var MODE_TYPE = "rest_platform";
 
-  window.__EMAD_CLOUD_CONFIG__ = { dbBase: DB_BASE, appId: APP_ID, appUrl: APP_URL, mode: MODE_TYPE, fp: "da281885e18349bd9e484652e2f1fe82dfe0109adbeccdadfe4c1307dcf57c5c" };
+  window.__EMAD_CLOUD_CONFIG__ = { dbBase: DB_BASE, appId: APP_ID, appUrl: APP_URL, mode: MODE_TYPE, fp: "a48bc076f39981d4b031433085786fa8a2df41f54924c5074c647b3b9ef8f5a6" };
 
   if (MODE_TYPE === "rest_platform") {
     try {
@@ -287,7 +287,14 @@
       copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
       alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
       zoomIn: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>',
-      zoomOut: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>'
+      zoomOut: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>',
+      radar: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="12"/>',
+      scale: '<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+      wand: '<path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h0"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/>',
+      maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+      monitor: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+      clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'
     };
 
     function svgIcon(name, size = 18, cls = '') {
@@ -336,6 +343,7 @@
     const ROSTER_KEY = 'edu.roster.v1';
     const UNLISTED_KEY = 'edu.unlisted.v1';
     const RESULTS_KEY = 'edu.results.v1';
+    const ACHIEVEMENTS_KEY = 'edu.studentAchievements.v1';
 
     const GEMINI_MODELS = [
       { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash (الأحدث والأسرع)' },
@@ -392,6 +400,7 @@
       teacherLogo: null,
       schoolLogo: null,
       questionsPerLevel: 5,
+      includeEssayQuestion: true,
       directUploadMode: false,
       geminiApiKey: '',
       geminiModel: 'gemini-3-flash-preview',
@@ -504,6 +513,34 @@
       localStorage.removeItem(RESULTS_KEY);
     }
 
+    function loadStudentAchievements() {
+      try {
+        const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch { return []; }
+    }
+
+    function saveStudentAchievements(list) {
+      localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(list.slice(0, 500)));
+    }
+
+    async function recordStudentAchievement(entry) {
+      const idx = state.studentAchievements.findIndex(x => x.id === entry.id);
+      if (idx >= 0) state.studentAchievements[idx] = { ...state.studentAchievements[idx], ...entry };
+      else state.studentAchievements.unshift(entry);
+      saveStudentAchievements(state.studentAchievements);
+      const fbBase = normalizeFirebaseUrl(state.settings.firebaseUrl);
+      if (fbBase) {
+        try {
+          await fbRequest(fbBase, `studentAchievements/${entry.id}`, 'PUT', entry);
+          state.cloudConnected = true;
+        } catch (e) {
+          console.warn('Cloud achievement sync error:', e);
+        }
+      }
+    }
+
     // ===================== 4. FIREBASE CLOUD SYNC ENGINE =====================
     function normalizeFirebaseUrl(url) {
       let u = String(url || '').trim();
@@ -601,9 +638,10 @@
       const base = normalizeFirebaseUrl(state.settings.firebaseUrl);
       if (!base) return;
       try {
-        const [resObj, unlObj] = await Promise.all([
+        const [resObj, unlObj, achObj] = await Promise.all([
           fbRequest(base, 'results', 'GET'),
-          fbRequest(base, 'unlistedStudents', 'GET')
+          fbRequest(base, 'unlistedStudents', 'GET'),
+          fbRequest(base, 'studentAchievements', 'GET')
         ]);
         if (resObj && typeof resObj === 'object') {
           const remoteResults = Object.values(resObj).filter(r => r && r.studentName);
@@ -623,6 +661,14 @@
           state.unlistedStudents = Array.from(map.values()).filter(u => !u.resolved);
           saveUnlisted(state.unlistedStudents);
         }
+        if (achObj && typeof achObj === 'object') {
+          const remoteAch = Object.values(achObj).filter(a => a && a.id && a.studentName);
+          const localAch = loadStudentAchievements();
+          const achMap = new Map();
+          [...remoteAch, ...localAch].forEach(item => achMap.set(String(item.id), item));
+          state.studentAchievements = Array.from(achMap.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          saveStudentAchievements(state.studentAchievements);
+        }
         state.cloudConnected = true;
       } catch (e) {
         console.warn('Cloud results pull error:', e);
@@ -641,6 +687,8 @@
       quizBank: loadQuizBank(),
       roster: loadRoster(),
       unlistedStudents: loadUnlisted(),
+      studentAchievements: loadStudentAchievements(),
+      previewAchievementId: '',
       activeQuiz: null,
       activeRunQuiz: null,
       selectedQuizId: '',
@@ -655,10 +703,33 @@
         typedName: ''
       },
       pendingDirectQuiz: null,
+      quizStartedAt: 0,
       qIndex: 0,
       selectedOption: null,
+      essayDraft: '',
+      essayGradingBusy: false,
+      essayAppealUsed: false,
+      lastEssayEval: null, // { score: 0|1|2, maxPoints: 2, feedback: string, usedFallback: boolean, appealed: boolean }
       revealed: false,
       answers: [],
+      // Skill Gap Radar & Remedial Worksheet state
+      radarStage: 'ALL',
+      radarGrade: 'ALL',
+      radarSection: 'ALL',
+      radarLesson: 'ALL',
+      remedialBusy: false,
+      remedialError: '',
+      remedialWorksheet: null,
+      // Live Competition Leaderboard state
+      boardStage: 'ALL',
+      boardGrade: 'ALL',
+      boardLesson: 'ALL',
+      boardTimeScope: 'TODAY', // 'TODAY' | 'ALL'
+      boardPresentationMode: false,
+      boardLiveAuto: true,
+      boardLastSyncText: '',
+      boardKnownIds: new Set(),
+      boardNewArrivalIds: new Set(),
       result: null,
       touched: false,
       busy: false,
@@ -714,8 +785,13 @@
     function buildShuffledRunQuiz(baseQuiz) {
       const shuffledQuestions = [];
       [1, 2, 3].forEach(lvl => {
-        const lvlQs = shuffleArray(baseQuiz.questions.filter(q => q.level === lvl));
-        lvlQs.forEach(q => {
+        const nonEssay = shuffleArray(baseQuiz.questions.filter(q => q.level === lvl && q.type !== 'essay'));
+        const essays = baseQuiz.questions.filter(q => q.level === lvl && q.type === 'essay');
+        [...nonEssay, ...essays].forEach(q => {
+          if (q.type === 'essay') {
+            shuffledQuestions.push({ ...q, options: [], keyPoints: [...(q.keyPoints || [])] });
+            return;
+          }
           const isTF = q.type === 'tf' || q.options.length === 2;
           if (isTF) {
             shuffledQuestions.push({ ...q, options: [...q.options] });
@@ -820,12 +896,15 @@
     }
 
     // ===================== 8. GEMINI API =====================
-    function buildUniversalPrompt(questionsPerLevel, chosenSubject, chosenStage, chosenGrade) {
+    function buildUniversalPrompt(questionsPerLevel, chosenSubject, chosenStage, chosenGrade, includeEssay = true) {
       const total = questionsPerLevel * 3;
       const subjectHint = chosenSubject && chosenSubject !== SUBJECT_OPTIONS[0]
         ? `المادة المحددة من المعلّم هي: «${chosenSubject}» (التزم بطبيعتها ومصطلحاتها).`
         : 'اكتشف اسم المادة الدراسية بدقة من المحتوى المرفق.';
       const gradeHint = chosenGrade ? `الفئة المستهدفة: ${chosenStage} — ${chosenGrade}.` : '';
+      const essayRule = includeEssay
+        ? `   - اجعل السؤال الأخير في المستوى 3 سؤالًا مقاليًّا تحليليًّا قصيرًا ("type": "essay", "level": 3, "dok": "DOK 4") يتطلّب من الطالب إجابة مركّزة من جملة إلى ثلاث جمل (تفسير، استنتاج، أو تعليل)، مع تزويده بحقل "modelAnswer" (الإجابة النموذجية المختصرة) وحقل "keyPoints" (مصفوفة من 2 إلى 3 أفكار مفتاحية أساسية تُمنح الدرجة بناءً على تحقق معناها بعدل).`
+        : '';
 
       return `أنت معلّم خبير ومصمّم اختبارات تحصيلية باللغة العربية لمختلف المواد الدراسية. مهمتك تحليل الملف أو الصورة المرفقة فقط، وبناء اختبار تفاعلي متدرج بأسلوب تربوي طبيعي.
 ${subjectHint}
@@ -841,7 +920,8 @@ ${gradeHint}
    - المستوى 1 (السهل): التذكّر والفهم (تصنيف بلوم: التذكّر/الفهم | DOK 1 — الاستدعاء المباشر). نوّع فيه بين أسئلة اختيار من متعدد ("type": "mcq") وسؤال واحد أو اثنين صواب/خطأ ("type": "tf" بخيارين فقط: ["صواب", "خطأ"] أو ["True", "False"]).
    - المستوى 2 (المتوسط): التطبيق والتحليل (تصنيف بلوم: التطبيق/التحليل | DOK 2 — المهارات والمفاهيم والربط).
    - المستوى 3 (الأصعب): التقييم والابتكار وعمق المعرفة (تصنيف بلوم: التقييم/الابتكار | DOK 3 و 4 — التفكير الاستراتيجي وحل المشكلات والاستنتاج العميق).
-7. كل سؤال يحتوي: "level" (1 أو 2 أو 3)، "type" ("mcq" أو "tf")، "text"، "options"، "correctIndex"، "bloom"، "dok"، "explanation".
+${essayRule}
+7. كل سؤال يحتوي: "level" (1 أو 2 أو 3)، "type" ("mcq" أو "tf" أو "essay")، "text"، "options" (فارغة [] للمقالي)، "correctIndex"، "modelAnswer" (للمقالي)، "keyPoints" (مصفوفة أفكار أساسية للمقالي)، "bloom"، "dok"، "explanation".
 
 أعد JSON فقط بالصيغة التالية دون أي نص إضافي:
 {
@@ -859,6 +939,18 @@ ${gradeHint}
       "bloom": "التذكّر",
       "dok": "DOK 1",
       "explanation": "شرح تربوي مباشر للقاعدة أو المعلومة"
+    },
+    {
+      "level": 3,
+      "type": "essay",
+      "text": "سؤال مقالي تحليلي قصير",
+      "options": [],
+      "correctIndex": 0,
+      "modelAnswer": "الإجابة النموذجية المختصرة",
+      "keyPoints": ["الفكرة الأساسية الأولى", "الفكرة الأساسية الثانية"],
+      "bloom": "التقييم",
+      "dok": "DOK 4",
+      "explanation": "توضيح تربوي مباشر لعناصر الإجابة الصحيحة"
     }
   ]
 }`;
@@ -887,6 +979,24 @@ ${gradeHint}
       const questions = qs.map((q, idx) => {
         const level = Number(q?.level);
         if (![1, 2, 3].includes(level)) return null;
+        if (q?.type === 'essay') {
+          const modelAns = cleanNaturalArabic(q?.modelAnswer || q?.explanation || '');
+          const keyPts = Array.isArray(q?.keyPoints) ? q.keyPoints.map(k => cleanNaturalArabic(k)).filter(Boolean) : [];
+          return {
+            id: `q-${idx}-${Date.now()}`,
+            level: 3,
+            type: 'essay',
+            maxPoints: 2,
+            text: cleanNaturalArabic(q?.text),
+            options: [],
+            correctIndex: 0,
+            modelAnswer: modelAns,
+            keyPoints: keyPts.length ? keyPts : (modelAns ? [modelAns] : []),
+            bloom: String(q?.bloom || 'التقييم').trim(),
+            dok: String(q?.dok || 'DOK 4').trim(),
+            explanation: cleanNaturalArabic(q?.explanation || modelAns)
+          };
+        }
         const rawOpts = Array.isArray(q?.options) ? q.options.map(String).filter(s => s.trim() !== '') : [];
         if (rawOpts.length < 2) return null;
         const isTF = q?.type === 'tf' || rawOpts.length === 2;
@@ -898,6 +1008,7 @@ ${gradeHint}
           id: `q-${idx}-${Date.now()}`,
           level,
           type: isTF ? 'tf' : 'mcq',
+          maxPoints: 1,
           text: cleanNaturalArabic(q?.text),
           options,
           correctIndex: ci,
@@ -983,7 +1094,8 @@ ${gradeHint}
       if (!cleanKey) throw new Error('يرجى إدخال مفتاح Gemini API أولاً من تبويب «الإعدادات والشجرة».');
       if (!files || files.length === 0) throw new Error('يرجى رفع ملف أو صورة الدرس أولاً.');
 
-      const parts = [{ text: buildUniversalPrompt(questionsPerLevel, metaOverrides.subject, metaOverrides.stage, metaOverrides.grade) }];
+      const includeEssay = metaOverrides.includeEssay !== undefined ? metaOverrides.includeEssay : (state.settings.includeEssayQuestion !== false);
+      const parts = [{ text: buildUniversalPrompt(questionsPerLevel, metaOverrides.subject, metaOverrides.stage, metaOverrides.grade, includeEssay) }];
       for (const f of files) {
         if (f.kind === 'image' || f.kind === 'pdf') {
           parts.push({ inlineData: { mimeType: f.kind === 'pdf' ? 'application/pdf' : f.mime, data: f.base64 } });
@@ -1023,6 +1135,329 @@ ${gradeHint}
       }
 
       throw new Error(`تعذّر إكمال التوليد (${lastErr?.status ? 'رمز ' + lastErr.status : 'خطأ اتصال'}): ${lastErr?.message || 'حاول مرة أخرى بعد قليل.'}`);
+    }
+
+    // ===================== 8B. FAIR & ANTI-INJUSTICE ESSAY GRADING ENGINE =====================
+    function normalizeArabicForFairGrading(text) {
+      return String(text || '')
+        .toLowerCase()
+        .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // remove tashkeel & tatweel
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function extractMeaningTokens(text) {
+      const stopWords = new Set(['في', 'من', 'على', 'الي', 'عن', 'ان', 'او', 'ثم', 'هذا', 'هذه', 'التي', 'الذي', 'ما', 'لا', 'لم', 'لن', 'هو', 'هي', 'كان', 'تكون', 'يكون', 'كل', 'بعض', 'مع', 'عند', 'بين', 'انه', 'لان', 'حيث', 'قد', 'the', 'is', 'are', 'to', 'of', 'and', 'in', 'a', 'that']);
+      return normalizeArabicForFairGrading(text)
+        .split(' ')
+        .map(w => w.replace(/^(ال|وال|فال|بال|كال|لل)/, ''))
+        .filter(w => w.length >= 2 && !stopWords.has(w));
+    }
+
+    function gradeEssayLocally(question, studentText, isAppeal = false) {
+      const cleanStudent = normalizeArabicForFairGrading(studentText);
+      if (!cleanStudent || cleanStudent.length < 2) {
+        return { score: 0, maxPoints: 2, feedback: 'لم تُكتب إجابة واضحة. راجع الإجابة النموذجية أدناه.', usedFallback: true, appealed: isAppeal };
+      }
+
+      const keyPoints = (question.keyPoints && question.keyPoints.length > 0)
+        ? question.keyPoints
+        : [question.modelAnswer || question.explanation || ''];
+
+      let matchedPoints = 0;
+      const studentTokens = new Set(extractMeaningTokens(studentText));
+
+      keyPoints.forEach(kp => {
+        const kpTokens = extractMeaningTokens(kp);
+        if (kpTokens.length === 0) return;
+        let hits = 0;
+        kpTokens.forEach(kt => {
+          for (const st of studentTokens) {
+            if (st === kt || (st.length >= 4 && kt.length >= 4 && (st.includes(kt) || kt.includes(st)))) {
+              hits++;
+              break;
+            }
+          }
+        });
+        if (hits / kpTokens.length >= 0.45) matchedPoints++;
+      });
+
+      const ratio = keyPoints.length > 0 ? (matchedPoints / keyPoints.length) : 0;
+      let score = 0;
+      if (ratio >= 0.6 || (keyPoints.length === 1 && matchedPoints === 1)) score = 2;
+      else if (ratio >= 0.25 || matchedPoints >= 1) score = 1;
+      else if (isAppeal && studentTokens.size >= 3) score = 1;
+
+      const feedback = score === 2
+        ? 'إجابة ممتازة ومكتملة المعنى، أحسنت التعبير والاستنتاج!'
+        : score === 1
+          ? 'إجابة موفّقة جزئيًّا؛ أصبت في جانب مهم من الفكرة، ويمكنك تعزيزها ببقية عناصر الإجابة النموذجية.'
+          : 'تحتاج إجابتك إلى دقّة أكبر؛ تأمّل الإجابة النموذجية أدناه وقارنها بما كتبت.';
+
+      return { score, maxPoints: 2, feedback, usedFallback: true, appealed: isAppeal };
+    }
+
+    async function gradeEssayAnswer(question, studentText, isAppeal = false) {
+      const cleanKey = (state.settings.geminiApiKey || '').trim();
+      if (!cleanKey) {
+        return gradeEssayLocally(question, studentText, isAppeal);
+      }
+
+      const appealDirective = isAppeal
+        ? 'تنبيه هام: الطالب يطلب إعادة مراجعة عادلة لإجابته! أعد قراءة إجابته بعين المعلّم المتسامح الباحث عن أي وجه صحيح للمعنى أو استنتاج منطقي مقبول ضمن سياق الدرس، وارفع درجته إن وُجد أي أساس صحيح في كلامه.'
+        : '';
+
+      const gradingPrompt = `أنت معلّم تربوي عادل وحكيم. مهمتك تصحيح إجابة طالب على سؤال مقالي قصير بمراعاة مبدأ «عدم الظلم والتقدير العادل»:
+${appealDirective}
+قواعد التصحيح العادل:
+1. احكم على **المعنى والفهم الصحيح** للفكرة، واقبل صياغة الطالب بأسلوبه الخاص ومرادفاته الصحيحة دون اشتراط التطابق الحرفي مع الإجابة النموذجية.
+2. تجاوز عن الأخطاء الإملائية البسيطة (مثل الهمزات والتاء المربوطة وعلامات الترقيم) ما دام المعنى سليمًا ومفهومًا.
+3. امنح تقديرًا جزئيًّا عادلًا من 2:
+   - 2: إجابة صحيحة وافية المعنى.
+   - 1: إجابة صحيحة جزئيًّا (ذكرت جزءًا صحيحًا من الفكرة أو مقدمة صحيحة ونقصها التفصيل).
+   - 0: إجابة خاطئة تمامًا أو لا صلة لها بالسؤال.
+
+السؤال: ${question.text}
+الإجابة النموذجية المرجعية: ${question.modelAnswer || question.explanation}
+الأفكار الأساسية المطلوبة: ${(question.keyPoints || []).join(' | ')}
+إجابة الطالب: ${studentText}
+
+أعد JSON فقط بالصيغة التالية:
+{
+  "score": 2,
+  "feedback": "تغذية راجعة تربوية مشجعة وعادلة ومباشرة للطالب"
+}`;
+
+      const body = {
+        contents: [{ role: 'user', parts: [{ text: gradingPrompt }] }],
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+      };
+
+      const modelsToTry = [state.settings.geminiModel || 'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview'];
+      for (const m of modelsToTry) {
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${m.replace(/^models\//, '')}:generateContent`;
+          let res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
+            body: JSON.stringify(body)
+          });
+          if (res.status === 401 || res.status === 403) {
+            res = await fetch(`${endpoint}?key=${encodeURIComponent(cleanKey)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            });
+          }
+          if (!res.ok) continue;
+          const data = await res.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const match = rawText.match(/\{[\s\S]*\}/);
+          const parsed = JSON.parse(match ? match[0] : rawText);
+          let sc = Number(parsed?.score);
+          if (![0, 1, 2].includes(sc)) sc = sc >= 1.5 ? 2 : sc >= 0.5 ? 1 : 0;
+          return {
+            score: sc,
+            maxPoints: 2,
+            feedback: cleanNaturalArabic(parsed?.feedback || 'تمّ تقييم إجابتك.'),
+            usedFallback: false,
+            appealed: isAppeal
+          };
+        } catch {}
+      }
+
+      return gradeEssayLocally(question, studentText, isAppeal);
+    }
+
+    // ===================== 8C. SKILL GAP RADAR & REMEDIAL WORKSHEET GENERATOR =====================
+    function computeSkillGapAnalytics(logs) {
+      const levelStats = {
+        1: { level: 1, name: 'المستوى الأول (التذكّر والفهم)', earned: 0, max: 0 },
+        2: { level: 2, name: 'المستوى الثاني (التطبيق والتحليل)', earned: 0, max: 0 },
+        3: { level: 3, name: 'المستوى الثالث (التقييم وعمق المعرفة)', earned: 0, max: 0 }
+      };
+      const questionMap = new Map();
+
+      logs.forEach(r => {
+        // Level aggregates
+        [1, 2, 3].forEach(lvl => {
+          const str = r[`lvl${lvl}`];
+          if (str && str.includes('/')) {
+            const [e, m] = str.split('/').map(Number);
+            if (!isNaN(e) && !isNaN(m)) {
+              levelStats[lvl].earned += e;
+              levelStats[lvl].max += m;
+            }
+          }
+        });
+
+        // Per-question breakdown if available
+        if (Array.isArray(r.questionBreakdown)) {
+          r.questionBreakdown.forEach(qb => {
+            const key = normalizeArabicForFairGrading(qb.text).slice(0, 90) || qb.questionId;
+            if (!questionMap.has(key)) {
+              questionMap.set(key, {
+                text: qb.text,
+                level: qb.level || 1,
+                bloom: qb.bloom || '',
+                dok: qb.dok || '',
+                subject: r.subject || '',
+                lessonTitle: r.lessonTitle || '',
+                explanation: qb.explanation || '',
+                options: qb.options || [],
+                correctIndex: qb.correctIndex ?? 0,
+                modelAnswer: qb.modelAnswer || '',
+                type: qb.type || 'mcq',
+                earned: 0,
+                max: 0,
+                attempts: 0,
+                missedStudents: []
+              });
+            }
+            const item = questionMap.get(key);
+            const maxP = qb.maxPoints || 1;
+            const earnP = qb.earnedPoints !== undefined ? qb.earnedPoints : (qb.correct ? maxP : 0);
+            item.earned += earnP;
+            item.max += maxP;
+            item.attempts += 1;
+            if (earnP < maxP && r.studentName && !item.missedStudents.includes(r.studentName)) {
+              item.missedStudents.push(r.studentName);
+            }
+          });
+        }
+      });
+
+      const levelsSummary = [1, 2, 3].map(lvl => {
+        const s = levelStats[lvl];
+        const pct = s.max > 0 ? Math.round((s.earned / s.max) * 100) : null;
+        return { ...s, pct };
+      });
+
+      const weakQuestions = Array.from(questionMap.values())
+        .map(q => {
+          const masteryPct = q.max > 0 ? Math.round((q.earned / q.max) * 100) : 100;
+          return { ...q, masteryPct, errorRate: 100 - masteryPct };
+        })
+        .sort((a, b) => a.masteryPct - b.masteryPct);
+
+      return { levelsSummary, weakQuestions };
+    }
+
+    async function generateRemedialWorksheet(weakItems, filterMeta) {
+      const targetGaps = weakItems.filter(w => w.masteryPct < 80).slice(0, 6);
+      const sourceGaps = targetGaps.length > 0 ? targetGaps : weakItems.slice(0, 5);
+      if (sourceGaps.length === 0) {
+        throw new Error('لا توجد بيانات كافية لتحليل الفجوات. يجب أن يُتمّ طالب واحد على الأقل اختبارًا بعد هذا التحديث.');
+      }
+
+      const subject = sourceGaps[0]?.subject || 'مادّة دراسية';
+      const lessonTitle = filterMeta.lesson !== 'ALL' ? filterMeta.lesson : (sourceGaps[0]?.lessonTitle || 'مهارات الدرس');
+      const cleanKey = (state.settings.geminiApiKey || '').trim();
+
+      if (cleanKey) {
+        try {
+          const gapsSummary = sourceGaps.map((g, idx) =>
+            `${idx + 1}. المهارة/السؤال: "${g.text}" (مستوى بلوم: ${g.bloom} | نسبة الإخفاق: ${g.errorRate}%) — التوضيح: ${g.explanation || g.modelAnswer}`
+          ).join('\n');
+
+          const prompt = `أنت خبير تربوي متخصص في المعالجة الفردية وبناء أوراق العمل العلاجية.
+رصد رادار الفجوات المهارية تعثّر الطلاب في المهارات التالية في مادّة «${subject}» — درس «${lessonTitle}»:
+${gapsSummary}
+
+المطلوب بناء **ورقة عمل علاجية مركّزة** تعالج هذه الفجوات بدقة:
+1. اكتب "remedialConceptBox": شرحًا علاجيًّا مبسّطًا ومركّزًا (3 إلى 4 أسطر) يشرح القواعد أو المفاهيم التي أخفق فيها الطلاب بأسلوب سهل ومباشر.
+2. أنشئ 5 أسئلة تدريبية علاجية جديدة متدرّجة تقيس نفس المهارات التي تعثّر فيها الطلاب للتأكد من إتقانهم لها.
+3. التزم قواعد الرسم الإملائي العربي (وضع تنوين الفتح قبل الألف الزائدة مثل: كتابًا، ووضع الشدّة دون إفراط في تشكيل كل حرف).
+
+أعد JSON فقط بالصيغة التالية:
+{
+  "remedialTitle": "ورقة عمل علاجية مركّزة: ${lessonTitle}",
+  "remedialConceptBox": "الشرح العلاجي المبسّط للمهارات المستهدفة",
+  "questions": [
+    {
+      "level": 1,
+      "type": "mcq",
+      "text": "نص السؤال العلاجي",
+      "options": ["الخيار 1", "الخيار 2", "الخيار 3", "الخيار 4"],
+      "correctIndex": 0,
+      "bloom": "الفهم",
+      "dok": "DOK 1",
+      "explanation": "توضيح الحل الصحيح"
+    }
+  ]
+}`;
+
+          const body = {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+          };
+          const model = state.settings.geminiModel || 'gemini-3-flash-preview';
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model.replace(/^models\//, '')}:generateContent`;
+          let res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
+            body: JSON.stringify(body)
+          });
+          if (res.status === 401 || res.status === 403) {
+            res = await fetch(`${endpoint}?key=${encodeURIComponent(cleanKey)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            });
+          }
+          if (res.ok) {
+            const data = await res.json();
+            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const match = rawText.match(/\{[\s\S]*\}/);
+            const parsed = JSON.parse(match ? match[0] : rawText);
+            const sanitized = sanitizeQuiz(parsed, {
+              subject,
+              stage: filterMeta.stage !== 'ALL' ? filterMeta.stage : '',
+              grade: filterMeta.grade !== 'ALL' ? filterMeta.grade : ''
+            });
+            sanitized.lessonTitle = cleanNaturalArabic(parsed?.remedialTitle || `ورقة عمل علاجية: ${lessonTitle}`);
+            sanitized.remedialConceptBox = cleanNaturalArabic(parsed?.remedialConceptBox || '');
+            sanitized.isRemedial = true;
+            return sanitized;
+          }
+        } catch (e) {
+          console.warn('Remedial AI fallback triggered:', e);
+        }
+      }
+
+      // Local Fallback Remedial Worksheet Builder
+      const conceptNotes = sourceGaps
+        .map(g => g.explanation || g.modelAnswer)
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(' • ');
+
+      return {
+        id: 'rem-' + Date.now().toString(36),
+        isRemedial: true,
+        subject,
+        stage: filterMeta.stage !== 'ALL' ? filterMeta.stage : '',
+        grade: filterMeta.grade !== 'ALL' ? filterMeta.grade : '',
+        lessonTitle: `ورقة عمل علاجية مركّزة: ${lessonTitle}`,
+        remedialConceptBox: conceptNotes || 'راجع المفاهيم الأساسية للدرس وأجب عن التدريبات العلاجية التالية بدقّة.',
+        questions: sourceGaps.map((g, idx) => ({
+          id: `rem-q-${idx}`,
+          level: g.level || 1,
+          type: g.type || 'mcq',
+          maxPoints: g.type === 'essay' ? 2 : 1,
+          text: g.text,
+          options: g.options || [],
+          correctIndex: g.correctIndex ?? 0,
+          modelAnswer: g.modelAnswer || '',
+          bloom: g.bloom || 'التعزيز العلاجي',
+          dok: g.dok || 'DOK 1',
+          explanation: g.explanation || g.modelAnswer || ''
+        }))
+      };
     }
 
     // ===================== 9. CLEAN SHARE LINK & STANDALONE EXPORT =====================
@@ -1089,6 +1524,30 @@ ${gradeHint}
       URL.revokeObjectURL(url);
     }
 
+    function exportAchievementsCSV() {
+      const rows = state.studentAchievements || [];
+      if (!rows.length) return;
+      const headers = ['التاريخ', 'اسم الطالب', 'المرحلة', 'الصف', 'الفصل', 'المادة', 'عنوان الدرس المُنشأ', 'عدد الأسئلة', 'حالة الإنجاز', 'الدرجة', 'النسبة المئوية'];
+      const lines = [headers.join(',')];
+      rows.forEach(a => {
+        const vals = [
+          `"${a.date || ''}"`, `"${a.studentName || ''}"`, `"${a.stage || ''}"`, `"${a.grade || ''}"`, `"${a.section || ''}"`,
+          `"${a.subject || ''}"`, `"${a.lessonTitle || ''}"`, `"${a.questionsCount || 0}"`,
+          `"${a.completed ? 'أتمّ الاختبار' : 'بانتظار الحل'}"`, `"${a.scoreText || '—'}"`, `"${a.percentage != null ? a.percentage + '%' : '—'}"`
+        ];
+        lines.push(vals.join(','));
+      });
+      const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `سجل_إنجازات_الطلاب_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
     // ===================== 10. HELPERS =====================
     function esc(str) {
       return String(str ?? '')
@@ -1128,6 +1587,84 @@ ${gradeHint}
       }
     }
 
+    // ===================== 10B. LIVE LEADERBOARD POLLING & HELPERS =====================
+    let boardPollTimer = null;
+
+    function formatDuration(sec) {
+      const s = Number(sec);
+      if (!s || isNaN(s) || s <= 0) return '';
+      if (s < 60) return `${s} ثانية`;
+      const m = Math.floor(s / 60);
+      const rem = s % 60;
+      return rem > 0 ? `${m}د ${rem}ث` : `${m} دقيقة`;
+    }
+
+    function isSameLocalDay(ts) {
+      if (!ts) return false;
+      const d = new Date(Number(ts));
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear() &&
+             d.getMonth() === now.getMonth() &&
+             d.getDate() === now.getDate();
+    }
+
+    function openLiveLeaderboard() {
+      const existing = loadResultsLog();
+      state.boardKnownIds = new Set(existing.map(r => String(r.id)));
+      state.boardNewArrivalIds = new Set();
+      state.panelOpen = false;
+      state.phase = 'leaderboard';
+      state.boardLastSyncText = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      startBoardPolling();
+      render();
+      if (normalizeFirebaseUrl(state.settings.firebaseUrl)) {
+        refreshLeaderboardData(false);
+      }
+    }
+
+    async function refreshLeaderboardData(announceNew = true) {
+      if (normalizeFirebaseUrl(state.settings.firebaseUrl)) {
+        await pullCloudResultsAndUnlisted();
+      }
+      const logs = loadResultsLog();
+      const freshIds = [];
+      logs.forEach(r => {
+        const sid = String(r.id);
+        if (!state.boardKnownIds.has(sid)) {
+          state.boardKnownIds.add(sid);
+          freshIds.push(sid);
+        }
+      });
+      if (announceNew && freshIds.length > 0) {
+        freshIds.forEach(id => state.boardNewArrivalIds.add(id));
+        sfx.complete();
+      }
+      state.boardLastSyncText = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      if (state.phase === 'leaderboard') render();
+    }
+
+    function startBoardPolling() {
+      stopBoardPolling();
+      boardPollTimer = window.setInterval(() => {
+        if (state.phase === 'leaderboard' && state.boardLiveAuto) {
+          refreshLeaderboardData(true);
+        }
+      }, 5000);
+    }
+
+    function stopBoardPolling() {
+      if (boardPollTimer) {
+        window.clearInterval(boardPollTimer);
+        boardPollTimer = null;
+      }
+    }
+
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === RESULTS_KEY && state.phase === 'leaderboard') {
+        refreshLeaderboardData(true);
+      }
+    });
+
     // ===================== 11. RENDER ENGINE =====================
     function render() {
       try {
@@ -1139,6 +1676,7 @@ ${gradeHint}
       else if (state.phase === 'quiz') html = renderQuiz();
       else if (state.phase === 'certificate') html = renderCertificate();
       else if (state.phase === 'printExam') html = renderOfficialPrintExam();
+      else if (state.phase === 'leaderboard') html = renderLiveLeaderboard();
 
       if (state.panelOpen && !IS_STUDENT_EXPORT) html += renderTeacherPanel();
       if (state.shareModalQuiz) html += renderShareQRModal();
@@ -1147,6 +1685,7 @@ ${gradeHint}
       app.innerHTML = html;
 
       if (state.phase === 'certificate') renderCertificateQR();
+      if (state.phase === 'leaderboard') renderLeaderboardQR();
       if (state.shareModalQuiz) renderShareModalQR();
       bindEvents();
       } catch (renderErr) {
@@ -1309,25 +1848,35 @@ ${gradeHint}
                   </div>
                 `
               ) : `
-                <div class="rounded-2xl bg-teal-50 border border-teal-100 p-4 mb-5">
-                  <div class="flex items-center gap-2 text-teal-700 mb-2">
-                    ${svgIcon('info', 18)}
-                    <span class="text-sm font-bold">وضع رفع الطالب المباشر</span>
+                <div class="rounded-2xl bg-teal-50 border border-teal-200 p-4 mb-5">
+                  <div class="flex items-center justify-between gap-2 text-teal-800 mb-2">
+                    <div class="flex items-center gap-2">
+                      ${svgIcon('sparkles', 18)}
+                      <span class="text-sm font-bold">وضع رفع الطالب المباشر (إنجازات الطلاب)</span>
+                    </div>
+                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white text-teal-700 border border-teal-200">يُحفظ باسمك تلقائيًّا</span>
                   </div>
-                  <p class="text-sm text-ink-600 mb-3">ارفع صورة كتابك أو ملف الدرس في أيّ مادّة، وسيُولَّد اختبارك آليًّا.</p>
+                  ${!valid ? `
+                    <div class="mb-3 rounded-xl bg-white/90 border border-gold-300 px-3.5 py-2.5 text-xs font-bold text-gold-900 flex items-center gap-2">
+                      ${svgIcon('info', 16, 'text-gold-600')}
+                      <span>اختر مرحلتك وصفّك وفصلك واكتب/اختر اسمك في الأعلى أولًا لتفعيل رفع الدرس وتوثيق إنجازك.</span>
+                    </div>
+                  ` : `
+                    <p class="text-xs font-bold text-teal-800 mb-3">مرحبًا <span class="underline">${esc(finalStudentName)}</span> (${esc(student.grade)} — فصل ${esc(student.section)})، ارفع صورة كتابك أو ملف الدرس الآن:</p>
+                  `}
                   <div class="flex flex-wrap gap-2 justify-center">
-                    <button id="btn-direct-file" ${busy ? 'disabled' : ''} class="px-4 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 flex items-center gap-2 disabled:opacity-60">
+                    <button id="btn-direct-file" ${busy ? 'disabled' : ''} class="px-4 py-2.5 rounded-xl ${valid ? 'bg-teal-600 hover:bg-teal-700' : 'bg-ink-400 hover:bg-ink-500'} text-white text-sm font-bold flex items-center gap-2 transition disabled:opacity-60">
                       ${svgIcon('upload', 16)} اختيار ملف
                     </button>
-                    <button id="btn-direct-cam" ${busy ? 'disabled' : ''} class="px-4 py-2.5 rounded-xl bg-white border border-teal-200 text-teal-700 text-sm font-bold hover:bg-teal-50 flex items-center gap-2 disabled:opacity-60">
+                    <button id="btn-direct-cam" ${busy ? 'disabled' : ''} class="px-4 py-2.5 rounded-xl bg-white border border-teal-200 text-teal-700 text-sm font-bold hover:bg-teal-50 flex items-center gap-2 transition disabled:opacity-60">
                       ${svgIcon('camera', 16)} التقاط صورة
                     </button>
                     <input id="inp-direct-file" type="file" multiple accept=".pdf,.docx,.txt,image/*" class="hidden" />
                     <input id="inp-direct-cam" type="file" accept="image/*" capture="environment" class="hidden" />
                   </div>
-                  ${pendingDirectQuiz ? `<p class="mt-3 text-center text-xs font-bold text-teal-800 bg-white/80 rounded-lg py-2">تم تجهيز اختبار (${esc(pendingDirectQuiz.subject)}): «${esc(pendingDirectQuiz.lessonTitle)}»</p>` : ''}
-                  ${busy ? `<div class="flex items-center justify-center gap-2 mt-3 text-teal-700 text-sm"><span class="w-4 h-4 shrink-0 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin"></span> ${esc(statusMsg || 'جارٍ توليد اختبارك...')}</div>` : ''}
-                  ${errorMsg ? `<div class="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">${esc(errorMsg)}</div>` : ''}
+                  ${pendingDirectQuiz ? `<p class="mt-3 text-center text-xs font-bold text-teal-800 bg-white rounded-xl border border-teal-200 py-2.5 px-3">✓ تمّ توثيق إنجازك وحفظ اختبار (${esc(pendingDirectQuiz.subject)}): «${esc(pendingDirectQuiz.lessonTitle)}» (${pendingDirectQuiz.questions.length} سؤالًا)</p>` : ''}
+                  ${busy ? `<div class="flex items-center justify-center gap-2 mt-3 text-teal-700 text-sm font-bold"><span class="w-4 h-4 shrink-0 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin"></span> ${esc(statusMsg || 'جارٍ تحليل الدرس وتوثيق إنجازك...')}</div>` : ''}
+                  ${errorMsg ? `<div class="mt-3 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2.5">${esc(errorMsg)}</div>` : ''}
                 </div>
               `}
 
@@ -1347,10 +1896,16 @@ ${gradeHint}
         </div>
 
         ${!IS_STUDENT_EXPORT ? `
-          <button id="btn-open-panel" title="لوحة تحكّم المعلّم"
-            class="fixed bottom-5 left-5 z-30 w-11 h-11 rounded-full bg-white/90 backdrop-blur border border-ink-200 shadow-soft text-ink-500 hover:text-brand-600 hover:shadow-lift transition grid place-items-center">
-            ${svgIcon('settings', 19)}
-          </button>
+          <div class="fixed bottom-5 left-5 z-30 flex items-center gap-2">
+            <button id="btn-open-board-home" title="سبورة التنافس الحيّ (للصفّ والتعلّم عن بُعد)"
+              class="h-11 px-3.5 rounded-full bg-white/90 backdrop-blur border border-gold-300 shadow-soft text-gold-700 hover:bg-gold-50 hover:shadow-lift transition flex items-center gap-1.5 text-xs font-extrabold">
+              ${svgIcon('trophy', 17)} <span class="hidden sm:inline">سبورة التنافس الحيّ</span>
+            </button>
+            <button id="btn-open-panel" title="لوحة تحكّم المعلّم"
+              class="w-11 h-11 rounded-full bg-white/90 backdrop-blur border border-ink-200 shadow-soft text-ink-500 hover:text-brand-600 hover:shadow-lift transition grid place-items-center">
+              ${svgIcon('settings', 19)}
+            </button>
+          </div>
         ` : ''}
       </div>`;
     }
@@ -1371,7 +1926,8 @@ ${gradeHint}
         3: { label: 'المستوى الثالث', sub: 'الأصعب — التقييم والابتكار', badge: 'bg-rose-50 text-rose-700', cardActive: 'bg-rose-50 border-rose-200', text: 'text-rose-600', icon: 'trophy' }
       };
       const meta = levelMeta[q.level];
-      const correctCount = answers.filter(a => a.correct).length;
+      const earnedPoints = answers.reduce((sum, a) => sum + (a.earnedPoints !== undefined ? a.earnedPoints : (a.correct ? 1 : 0)), 0);
+      const totalPossiblePoints = questions.reduce((sum, qq) => sum + (qq.maxPoints || (qq.type === 'essay' ? 2 : 1)), 0);
       const progress = (qIndex / questions.length) * 100;
       const letters = isEn ? ['A', 'B', 'C', 'D'] : ['أ', 'ب', 'ج', 'د'];
 
@@ -1406,10 +1962,10 @@ ${gradeHint}
             <button id="btn-toggle-mute" class="p-2 rounded-lg hover:bg-ink-100 text-ink-500" title="الصوت">
               ${svgIcon(isAudioMuted ? 'volOff' : 'volOn', 18)}
             </button>
-            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-ink-100">
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-ink-100" title="مجموع النقاط">
               <span class="text-gold-500">${svgIcon('award', 15)}</span>
-              <span class="text-sm font-bold text-ink-800">${correctCount}</span>
-              <span class="text-xs text-ink-400">/ ${questions.length}</span>
+              <span class="text-sm font-bold text-ink-800">${earnedPoints}</span>
+              <span class="text-xs text-ink-400">/ ${totalPossiblePoints}</span>
             </div>
           </div>
           <div class="h-1.5 bg-ink-100">
@@ -1422,7 +1978,8 @@ ${gradeHint}
             ${[1, 2, 3].map(lvl => {
               const m = levelMeta[lvl];
               const lvlQs = questions.filter(qq => qq.level === lvl);
-              const lvlCorrect = answers.filter(a => a.correct && lvlQs.find(qq => qq.id === a.questionId)).length;
+              const lvlMax = lvlQs.reduce((s, qq) => s + (qq.maxPoints || (qq.type === 'essay' ? 2 : 1)), 0);
+              const lvlEarned = answers.filter(a => lvlQs.find(qq => qq.id === a.questionId)).reduce((s, a) => s + (a.earnedPoints !== undefined ? a.earnedPoints : (a.correct ? 1 : 0)), 0);
               const done = lvlQs.length > 0 && lvlQs.every(qq => answers.find(a => a.questionId === qq.id));
               const active = q.level === lvl;
               return `
@@ -1433,7 +1990,7 @@ ${gradeHint}
                   </div>
                   <div class="flex items-center justify-between mt-1">
                     <span class="text-[11px] text-ink-400">${done ? 'مكتمل' : active ? 'جارٍ' : 'منتظر'}</span>
-                    <span class="text-[11px] font-bold text-ink-600">${lvlCorrect}/${lvlQs.length}</span>
+                    <span class="text-[11px] font-bold text-ink-600">${lvlEarned}/${lvlMax}</span>
                   </div>
                 </div>`;
             }).join('')}
@@ -1454,41 +2011,85 @@ ${gradeHint}
                 ${q.bloom ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-ink-100 text-ink-600">مستوى بلوم: ${esc(q.bloom)}</span>` : ''}
                 ${q.dok ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-ink-100 text-ink-600">عمق المعرفة: ${esc(q.dok)}</span>` : ''}
                 ${q.type === 'tf' ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-700">صواب / خطأ</span>` : ''}
+                ${q.type === 'essay' ? `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-gold-100 text-gold-900">سؤال مقالي تحليلي (درجتان — تصحيح عادل بالمعنى)</span>` : ''}
               </div>
 
               <div dir="${isEn ? 'ltr' : 'rtl'}" class="${isEn ? 'text-left' : 'text-right'}">
                 <h2 style="font-size: ${qFontSize}px;" class="${readingCls} font-bold text-ink-900 mb-6">${esc(q.text)}</h2>
 
-                <div class="${q.type === 'tf' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-3'}">
-                  ${q.options.map((opt, idx) => {
-                    const isCorrect = idx === q.correctIndex;
-                    const isSelected = idx === selectedOption;
-                    let cls = 'border-ink-200 bg-white hover:border-brand-300 hover:bg-brand-50/40 cursor-pointer';
-                    let badgeCls = 'bg-ink-100 text-ink-600';
-                    let badgeContent = letters[idx] || (idx + 1);
-                    if (revealed) {
-                      if (isCorrect) {
-                        cls = 'border-teal-400 bg-teal-50 text-teal-900 cursor-default';
-                        badgeCls = 'bg-teal-500 text-white';
-                        badgeContent = svgIcon('check', 16);
-                      } else if (isSelected) {
-                        cls = 'border-rose-400 bg-rose-50 text-rose-900 cursor-default';
-                        badgeCls = 'bg-rose-500 text-white';
-                        badgeContent = svgIcon('x', 16);
-                      } else {
-                        cls = 'border-ink-100 bg-white opacity-60 cursor-default';
-                      }
-                    }
-                    return `
-                      <button data-opt-idx="${idx}" ${revealed ? 'disabled' : ''}
-                        class="btn-quiz-opt w-full ${isEn ? 'text-left' : 'text-right'} px-4 py-4 rounded-2xl border-2 transition-all flex items-center gap-3.5 ${cls}">
-                        <span class="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-sm font-bold ${badgeCls}">${badgeContent}</span>
-                        <span style="font-size: ${optFontSize}px;" class="flex-1 ${readingCls} font-semibold">${esc(opt)}</span>
-                      </button>`;
-                  }).join('')}
-                </div>
+                ${q.type === 'essay' ? `
+                  <div class="space-y-3">
+                    <div class="rounded-xl bg-teal-50/70 border border-teal-200 px-3.5 py-2 text-xs font-semibold text-teal-800 flex items-center gap-2">
+                      ${svgIcon('scale', 15, 'text-teal-600')}
+                      <span>اكتب إجابتك بأسلوبك الخاص؛ يُراعى في التصحيح صحة المعنى والاستنتاج مع التسامح الإملائي والتقدير الجزئي العادل.</span>
+                    </div>
+                    <textarea id="txt-essay-answer" rows="4" ${revealed || state.essayGradingBusy ? 'disabled' : ''}
+                      placeholder="${isEn ? 'Write your analytical answer here...' : 'اكتب إجابتك التحليلية هنا بوضوح...'}"
+                      style="font-size: ${optFontSize}px;"
+                      class="w-full p-4 rounded-2xl border-2 border-ink-200 bg-white outline-none focus:border-brand-500 transition ${readingCls} disabled:bg-ink-50">${esc(state.essayDraft)}</textarea>
 
-                ${revealed ? `
+                    ${!revealed ? `
+                      <button id="btn-submit-essay" ${state.essayGradingBusy || !state.essayDraft.trim() ? 'disabled' : ''}
+                        class="w-full py-3.5 rounded-xl bg-gradient-to-l from-teal-600 to-brand-600 text-white font-bold text-base flex items-center justify-center gap-2 hover:shadow-lift transition disabled:opacity-50">
+                        ${state.essayGradingBusy
+                          ? `<span class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span> جارٍ التصحيح العادل لإجابتك...`
+                          : `${svgIcon('check', 18)} اعتماد الإجابة وتصحيحها`}
+                      </button>
+                    ` : ''}
+                  </div>
+                ` : `
+                  <div class="${q.type === 'tf' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-3'}">
+                    ${q.options.map((opt, idx) => {
+                      const isCorrect = idx === q.correctIndex;
+                      const isSelected = idx === selectedOption;
+                      let cls = 'border-ink-200 bg-white hover:border-brand-300 hover:bg-brand-50/40 cursor-pointer';
+                      let badgeCls = 'bg-ink-100 text-ink-600';
+                      let badgeContent = letters[idx] || (idx + 1);
+                      if (revealed) {
+                        if (isCorrect) {
+                          cls = 'border-teal-400 bg-teal-50 text-teal-900 cursor-default';
+                          badgeCls = 'bg-teal-500 text-white';
+                          badgeContent = svgIcon('check', 16);
+                        } else if (isSelected) {
+                          cls = 'border-rose-400 bg-rose-50 text-rose-900 cursor-default';
+                          badgeCls = 'bg-rose-500 text-white';
+                          badgeContent = svgIcon('x', 16);
+                        } else {
+                          cls = 'border-ink-100 bg-white opacity-60 cursor-default';
+                        }
+                      }
+                      return `
+                        <button data-opt-idx="${idx}" ${revealed ? 'disabled' : ''}
+                          class="btn-quiz-opt w-full ${isEn ? 'text-left' : 'text-right'} px-4 py-4 rounded-2xl border-2 transition-all flex items-center gap-3.5 ${cls}">
+                          <span class="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-sm font-bold ${badgeCls}">${badgeContent}</span>
+                          <span style="font-size: ${optFontSize}px;" class="flex-1 ${readingCls} font-semibold">${esc(opt)}</span>
+                        </button>`;
+                    }).join('')}
+                  </div>
+                `}
+
+                ${revealed ? (q.type === 'essay' && state.lastEssayEval ? `
+                  <div class="mt-5 rounded-2xl ${state.lastEssayEval.score === 2 ? 'bg-teal-50 border-teal-200' : state.lastEssayEval.score === 1 ? 'bg-gold-50 border-gold-200' : 'bg-rose-50 border-rose-200'} border p-4 animate-fade-up space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <div class="flex items-center gap-2 font-bold text-sm ${state.lastEssayEval.score === 2 ? 'text-teal-800' : state.lastEssayEval.score === 1 ? 'text-gold-900' : 'text-rose-800'}">
+                        ${svgIcon('scale', 18)}
+                        <span>نتيجة التقييم العادل: ${state.lastEssayEval.score} من ${state.lastEssayEval.maxPoints} درجات</span>
+                      </div>
+                      ${state.lastEssayEval.score < 2 && !state.essayAppealUsed ? `
+                        <button id="btn-appeal-essay" ${state.essayGradingBusy ? 'disabled' : ''}
+                          class="px-3 py-1.5 rounded-xl bg-white border border-ink-300 text-ink-800 text-xs font-bold hover:bg-ink-100 flex items-center gap-1.5 shadow-sm">
+                          ${svgIcon('scale', 14, 'text-brand-600')}
+                          ${state.essayGradingBusy ? 'جارٍ إعادة المراجعة...' : 'أعتقد أن إجابتي صحيحة — أعد التقييم بعدل'}
+                        </button>
+                      ` : (state.essayAppealUsed ? `<span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white text-brand-700 border border-brand-200">تمّت إعادة المراجعة العادلة</span>` : '')}
+                    </div>
+                    <p style="font-size: ${expFontSize}px;" class="${readingCls} text-ink-800">${esc(state.lastEssayEval.feedback)}</p>
+                    <div class="rounded-xl bg-white/90 border border-ink-200 p-3">
+                      <p class="text-xs font-bold text-brand-700 mb-1">الإجابة النموذجية المرجعية:</p>
+                      <p style="font-size: ${expFontSize}px;" class="${readingCls} text-ink-900 font-semibold">${esc(q.modelAnswer || q.explanation)}</p>
+                    </div>
+                  </div>
+                ` : `
                   <div class="mt-5 rounded-2xl bg-brand-50/70 border border-brand-100 p-4 animate-fade-up">
                     <div class="flex items-center gap-2 text-brand-700 mb-1.5">
                       ${svgIcon('lightbulb', 17)}
@@ -1499,7 +2100,7 @@ ${gradeHint}
                       ${selectedOption === q.correctIndex ? 'إجابة صحيحة، أحسنت!' : `الإجابة الصحيحة: ${esc(q.options[q.correctIndex])}`}
                     </p>
                   </div>
-                ` : ''}
+                `) : ''}
               </div>
 
               ${revealed ? `
@@ -1635,6 +2236,11 @@ ${gradeHint}
                   من <span class="font-bold">${esc(result.student.grade)}</span> — الفصل <span class="font-bold">${esc(result.student.section)}</span>
                 </p>
 
+                ${result.quiz.createdByStudent ? `
+                  <div class="mb-2 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold">
+                    ${svgIcon('sparkles', 14, 'text-teal-600')} وسام الطالب المُبادر — أعدّ هذا الاختبار بنفسه وأتمّه بنجاح
+                  </div>
+                ` : ''}
                 <p class="text-ink-600 text-sm mb-1">قد أتمّ بنجاح اختبار درس ${result.quiz.subject ? `في مادّة <span class="font-bold text-ink-800">${esc(result.quiz.subject)}</span>` : ''}</p>
                 <h3 class="font-display text-xl font-bold text-brand-700 mb-4">${esc(result.quiz.lessonTitle)}</h3>
 
@@ -1769,7 +2375,9 @@ ${gradeHint}
             <div class="text-center flex-1 px-3">
               ${settings.institutionHeader ? `<p class="text-xs font-bold text-ink-600 mb-1">${esc(settings.institutionHeader)}</p>` : ''}
               <h1 class="font-display text-xl sm:text-2xl font-extrabold text-ink-900">
-                ${isTeacherKey ? 'نموذج الإجابة والتفسير التربوي المعتمد' : 'اختبار تقويميّ متدرّج في مهارات الدرس'}
+                ${qz.isRemedial
+                  ? (isTeacherKey ? 'نموذج إجابة ورقة العمل العلاجية' : 'ورقة عمل علاجية مركّزة لتعزيز المهارات')
+                  : (isTeacherKey ? 'نموذج الإجابة والتفسير التربوي المعتمد' : 'اختبار تقويميّ متدرّج في مهارات الدرس')}
               </h1>
               <p class="text-sm font-bold text-brand-700 mt-1">
                 المادّة: ${esc(qz.subject || '—')} &nbsp;|&nbsp; الدرس: ${esc(qz.lessonTitle)}
@@ -1785,7 +2393,7 @@ ${gradeHint}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border border-ink-300 rounded-xl p-3.5 mb-6 text-sm bg-ink-50/40">
               <div><span class="font-bold text-ink-700">اسم الطالب:</span> ........................................</div>
               <div><span class="font-bold text-ink-700">الصفّ / الفصل:</span> ................ / ........</div>
-              <div><span class="font-bold text-ink-700">الدرجة المستحقّة:</span> ........ / ${qz.questions.length}</div>
+              <div><span class="font-bold text-ink-700">الدرجة المستحقّة:</span> ........ / ${qz.questions.reduce((s, qq) => s + (qq.maxPoints || (qq.type === 'essay' ? 2 : 1)), 0)}</div>
             </div>
           ` : `
             <div class="mb-6 rounded-xl bg-teal-50 border border-teal-200 px-4 py-2.5 flex items-center justify-between text-xs font-bold text-teal-800">
@@ -1793,6 +2401,13 @@ ${gradeHint}
               <span>إجمالي الأسئلة: ${qz.questions.length}</span>
             </div>
           `}
+
+          ${qz.remedialConceptBox ? `
+            <div class="mb-6 rounded-xl bg-brand-50/70 border-2 border-brand-200 p-4">
+              <p class="font-display font-bold text-sm text-brand-800 mb-1.5">ملخّص التبسيط والشرح العلاجيّ للمهارات المستهدفة:</p>
+              <p class="font-reading-naskh text-sm text-ink-900 leading-relaxed">${esc(qz.remedialConceptBox)}</p>
+            </div>
+          ` : ''}
 
           <div class="space-y-6">
             ${levels.map(lvl => {
@@ -1816,19 +2431,32 @@ ${gradeHint}
                           </span>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                          ${q.options.map((opt, oi) => {
-                            const isAns = isTeacherKey && oi === q.correctIndex;
-                            return `
-                              <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-reading-naskh ${isAns ? 'border-teal-500 bg-teal-50 text-teal-900 font-bold' : 'border-ink-100 text-ink-800'}">
-                                <span class="w-5 h-5 rounded-full border ${isAns ? 'border-teal-600 bg-teal-600 text-white' : 'border-ink-400 text-ink-600'} grid place-items-center text-[11px] font-bold shrink-0">
-                                  ${isAns ? '✓' : (letters[oi] || oi + 1)}
-                                </span>
-                                <span>${esc(opt)}</span>
-                              </div>
-                            `;
-                          }).join('')}
-                        </div>
+                        ${q.type === 'essay' ? (
+                          isTeacherKey ? `
+                            <div class="mt-2 rounded-lg border border-teal-500 bg-teal-50 p-3 text-sm font-reading-naskh text-teal-950">
+                              <span class="font-bold">الإجابة النموذجية (درجتان):</span> ${esc(q.modelAnswer || q.explanation)}
+                            </div>
+                          ` : `
+                            <div class="mt-3 space-y-2.5">
+                              <div class="border-b border-dotted border-ink-400 h-6"></div>
+                              <div class="border-b border-dotted border-ink-400 h-6"></div>
+                            </div>
+                          `
+                        ) : `
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                            ${q.options.map((opt, oi) => {
+                              const isAns = isTeacherKey && oi === q.correctIndex;
+                              return `
+                                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-reading-naskh ${isAns ? 'border-teal-500 bg-teal-50 text-teal-900 font-bold' : 'border-ink-100 text-ink-800'}">
+                                  <span class="w-5 h-5 rounded-full border ${isAns ? 'border-teal-600 bg-teal-600 text-white' : 'border-ink-400 text-ink-600'} grid place-items-center text-[11px] font-bold shrink-0">
+                                    ${isAns ? '✓' : (letters[oi] || oi + 1)}
+                                  </span>
+                                  <span>${esc(opt)}</span>
+                                </div>
+                              `;
+                            }).join('')}
+                          </div>
+                        `}
 
                         ${isTeacherKey && q.explanation ? `
                           <div class="mt-2.5 pt-2 border-t border-dashed border-ink-200 text-xs font-reading-naskh text-ink-700">
@@ -1931,6 +2559,313 @@ ${gradeHint}
       </div>`;
     }
 
+    // --------------------- F2. LIVE CLASSROOM & REMOTE COMPETITION BOARD ---------------------
+    function renderLiveLeaderboard() {
+      const { settings, boardStage, boardGrade, boardLesson, boardTimeScope, boardPresentationMode, boardLiveAuto, boardLastSyncText, cloudConnected } = state;
+      const tree = settings.academicTree || [];
+      const allLogs = loadResultsLog();
+      const uniqueLessons = Array.from(new Set(allLogs.map(r => r.lessonTitle).filter(Boolean)));
+      const boardGrades = boardStage !== 'ALL' ? getGradesForStage(tree, boardStage) : [];
+
+      const filtered = allLogs.filter(r => {
+        if (boardTimeScope === 'TODAY' && !isSameLocalDay(r.id)) return false;
+        if (boardStage !== 'ALL' && r.stage !== boardStage) return false;
+        if (boardGrade !== 'ALL' && r.grade !== boardGrade) return false;
+        if (boardLesson !== 'ALL' && r.lessonTitle !== boardLesson) return false;
+        return true;
+      });
+
+      // Keep best attempt per student (highest percentage, then fastest duration)
+      const bestByStudent = new Map();
+      filtered.forEach(r => {
+        const key = `${(r.studentName || '').trim()}||${r.grade || ''}||${r.section || ''}||${r.lessonTitle || ''}`;
+        const prev = bestByStudent.get(key);
+        if (!prev) {
+          bestByStudent.set(key, r);
+        } else {
+          const rPct = Number(r.percentage || 0);
+          const pPct = Number(prev.percentage || 0);
+          const rDur = Number(r.durationSec || 999999);
+          const pDur = Number(prev.durationSec || 999999);
+          if (rPct > pPct || (rPct === pPct && rDur < pDur)) {
+            bestByStudent.set(key, r);
+          }
+        }
+      });
+
+      const rankedStudents = Array.from(bestByStudent.values()).sort((a, b) => {
+        const pctDiff = Number(b.percentage || 0) - Number(a.percentage || 0);
+        if (pctDiff !== 0) return pctDiff;
+        const durA = Number(a.durationSec || 999999);
+        const durB = Number(b.durationSec || 999999);
+        if (durA !== durB) return durA - durB;
+        return Number(a.id || 0) - Number(b.id || 0);
+      });
+
+      // Class / Section League Aggregation
+      const sectionMap = new Map();
+      rankedStudents.forEach(r => {
+        const secLabel = `${r.grade || 'صفّ'} — فصل ${r.section || '—'}`;
+        if (!sectionMap.has(secLabel)) {
+          sectionMap.set(secLabel, { label: secLabel, count: 0, sumPct: 0, fullCount: 0 });
+        }
+        const entry = sectionMap.get(secLabel);
+        entry.count += 1;
+        entry.sumPct += Number(r.percentage || 0);
+        if (Number(r.percentage || 0) === 100) entry.fullCount += 1;
+      });
+
+      const classLeague = Array.from(sectionMap.values())
+        .map(c => ({ ...c, avgPct: c.count > 0 ? Math.round(c.sumPct / c.count) : 0 }))
+        .sort((a, b) => b.avgPct - a.avgPct || b.fullCount - a.fullCount || b.count - a.count);
+
+      // Active Quiz for Quick Join QR
+      const activeBoardQuiz = (boardLesson !== 'ALL'
+        ? state.quizBank.find(q => q.lessonTitle === boardLesson)
+        : state.quizBank.find(q => q.isAvailable !== false)) || state.quizBank[0] || null;
+      const joinUrl = activeBoardQuiz ? buildCleanQuizLink(activeBoardQuiz) : window.location.href.split('?')[0];
+
+      const top3 = rankedStudents.slice(0, 3);
+      const restStudents = rankedStudents.slice(3, 25);
+      const fullScorersCount = rankedStudents.filter(r => Number(r.percentage) === 100).length;
+
+      return `
+      <div class="min-h-screen bg-gradient-to-br from-ink-900 via-brand-900 to-ink-900 text-white flex flex-col">
+        <!-- Top Bar (Hidden in Clean Presentation Mode) -->
+        ${!boardPresentationMode ? `
+          <div class="sticky top-0 z-30 bg-ink-900/85 backdrop-blur border-b border-white/10 px-4 py-3">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
+              <div class="flex items-center gap-2.5">
+                <button id="btn-exit-board" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition">
+                  ${svgIcon('arrowLeft', 15)} خروج
+                </button>
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full ${boardLiveAuto ? 'bg-teal-400 animate-ping' : 'bg-ink-400'}"></span>
+                  <span class="text-xs font-bold text-teal-300">${cloudConnected ? 'متصل بالسحابة لحظيًّا' : 'وضع العرض المحلّي'}</span>
+                  ${boardLastSyncText ? `<span class="text-[11px] text-white/50 hidden sm:inline">(آخر تحديث: ${esc(boardLastSyncText)})</span>` : ''}
+                </div>
+              </div>
+
+              <!-- Filters -->
+              <div class="flex flex-wrap items-center gap-2">
+                <select id="sel-board-scope" class="px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white text-xs font-bold outline-none">
+                  <option value="TODAY" class="text-ink-900" ${boardTimeScope === 'TODAY' ? 'selected' : ''}>جلسة اليوم فقط</option>
+                  <option value="ALL" class="text-ink-900" ${boardTimeScope === 'ALL' ? 'selected' : ''}>جميع الأيام</option>
+                </select>
+                <select id="sel-board-stage" class="px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white text-xs font-bold outline-none">
+                  <option value="ALL" class="text-ink-900">كلّ المراحل</option>
+                  ${tree.map(s => `<option value="${esc(s.name)}" class="text-ink-900" ${boardStage === s.name ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+                </select>
+                <select id="sel-board-grade" class="px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white text-xs font-bold outline-none">
+                  <option value="ALL" class="text-ink-900">كلّ الصفوف</option>
+                  ${boardGrades.map(g => `<option value="${esc(g.name)}" class="text-ink-900" ${boardGrade === g.name ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                </select>
+                <select id="sel-board-lesson" class="px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/15 text-white text-xs font-bold outline-none max-w-[180px]">
+                  <option value="ALL" class="text-ink-900">كلّ الدروس</option>
+                  ${uniqueLessons.map(ls => `<option value="${esc(ls)}" class="text-ink-900" ${boardLesson === ls ? 'selected' : ''}>${esc(ls)}</option>`).join('')}
+                </select>
+
+                <button id="btn-board-refresh" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white" title="تحديث فوري">
+                  ${svgIcon('refresh', 15)}
+                </button>
+                <button id="btn-board-present" class="px-3.5 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-ink-900 text-xs font-extrabold flex items-center gap-1.5 transition">
+                  ${svgIcon('monitor', 15)} وضع العرض النظيف
+                </button>
+                <button id="btn-board-fullscreen" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white" title="ملء الشاشة">
+                  ${svgIcon('maximize', 15)}
+                </button>
+              </div>
+            </div>
+          </div>
+        ` : `
+          <button id="btn-board-exit-present" title="إظهار شريط التحكّم"
+            class="fixed bottom-4 left-4 z-40 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur text-white/80 text-xs font-bold border border-white/20 transition">
+            إظهار التحكّم
+          </button>
+        `}
+
+        <!-- Main Board Body -->
+        <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+          <!-- Title & Live KPIs -->
+          <div class="flex flex-wrap items-center justify-between gap-4 bg-white/5 border border-white/10 rounded-3xl p-5">
+            <div class="flex items-center gap-3.5">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 text-ink-900 grid place-items-center shadow-lift shrink-0">
+                ${svgIcon('trophy', 30)}
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-white">سبورة التنافس الحيّ — أبطال التعلّم</h1>
+                  <span class="px-2.5 py-0.5 rounded-full bg-teal-500/20 border border-teal-400/40 text-teal-300 text-xs font-bold">
+                    ${boardTimeScope === 'TODAY' ? 'تحدّي اليوم' : 'السجلّ الشامل'}
+                  </span>
+                </div>
+                <p class="text-sm text-brand-200 mt-0.5">
+                  ${boardLesson !== 'ALL' ? `الدرس: ${esc(boardLesson)}` : (activeBoardQuiz ? `الدرس النشط: ${esc(activeBoardQuiz.lessonTitle)}` : 'منصّة التعلّم الذكيّ — البثّ المباشر للنتائج')}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="px-4 py-2.5 rounded-2xl bg-white/10 border border-white/10 text-center">
+                <p class="text-[11px] text-brand-200">المشاركون</p>
+                <p class="font-display text-2xl font-extrabold text-white">${rankedStudents.length}</p>
+              </div>
+              <div class="px-4 py-2.5 rounded-2xl bg-gold-500/20 border border-gold-400/30 text-center">
+                <p class="text-[11px] text-gold-200">أبطال 100%</p>
+                <p class="font-display text-2xl font-extrabold text-gold-300">${fullScorersCount}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left/Main 8 Cols: Top 3 Podium + Live Champions List -->
+            <div class="lg:col-span-8 space-y-6">
+              ${rankedStudents.length === 0 ? `
+                <div class="bg-white/5 border border-white/10 rounded-3xl p-12 text-center space-y-3">
+                  <div class="w-16 h-16 rounded-2xl bg-white/10 text-gold-300 grid place-items-center mx-auto animate-floaty">
+                    ${svgIcon('sparkles', 32)}
+                  </div>
+                  <h2 class="font-display text-xl font-bold text-white">في انتظار وصول أوائل الأبطال...</h2>
+                  <p class="text-sm text-brand-200 max-w-md mx-auto">
+                    بمجرد أن يُنهي أيّ طالب الاختبار من جواله أو جهازه، سيظهر اسمه ودرجته هنا مباشرةً على السبورة.
+                  </p>
+                </div>
+              ` : `
+                <!-- Top 3 Champions Podium -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  ${top3.map((st, idx) => {
+                    const rankStyles = [
+                      { rank: 'المركز الأوّل', border: 'border-gold-400 bg-gradient-to-b from-gold-500/25 to-white/10', badge: 'bg-gold-400 text-ink-900', icon: 'trophy' },
+                      { rank: 'المركز الثاني', border: 'border-slate-300/60 bg-white/10', badge: 'bg-slate-200 text-ink-900', icon: 'medal' },
+                      { rank: 'المركز الثالث', border: 'border-amber-600/60 bg-white/10', badge: 'bg-amber-600 text-white', icon: 'award' }
+                    ][idx];
+                    const isNew = state.boardNewArrivalIds.has(String(st.id));
+                    return `
+                    <div class="rounded-3xl border-2 ${rankStyles.border} p-5 text-center relative overflow-hidden animate-pop">
+                      ${isNew ? `<span class="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-teal-400 text-ink-900 text-[10px] font-extrabold animate-bounce">وصل الآن!</span>` : ''}
+                      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold ${rankStyles.badge} mb-3">
+                        ${svgIcon(rankStyles.icon, 14)} ${rankStyles.rank}
+                      </div>
+                      <h3 class="font-display text-lg sm:text-xl font-extrabold text-white truncate mb-1">${esc(st.studentName)}</h3>
+                      <p class="text-xs text-brand-200 mb-3">${esc(st.grade)} — فصل ${esc(st.section)}</p>
+                      <div class="flex items-center justify-center gap-3 pt-3 border-t border-white/10">
+                        <div>
+                          <p class="text-[10px] text-white/60">النسبة</p>
+                          <p class="font-display text-2xl font-extrabold text-gold-300">${st.percentage}%</p>
+                        </div>
+                        <div class="w-px h-8 bg-white/15"></div>
+                        <div>
+                          <p class="text-[10px] text-white/60">الدرجة</p>
+                          <p class="font-display text-lg font-bold text-white">${st.totalCorrect}/${st.totalQuestions}</p>
+                        </div>
+                        ${st.durationSec ? `
+                          <div class="w-px h-8 bg-white/15"></div>
+                          <div>
+                            <p class="text-[10px] text-white/60">الزمن</p>
+                            <p class="text-xs font-bold text-teal-300 mt-1">${formatDuration(st.durationSec)}</p>
+                          </div>
+                        ` : ''}
+                      </div>
+                    </div>`;
+                  }).join('')}
+                </div>
+
+                <!-- Remaining Ranked Students -->
+                ${restStudents.length > 0 ? `
+                  <div class="bg-white/5 border border-white/10 rounded-3xl p-4 space-y-2">
+                    <h3 class="font-display font-bold text-sm text-brand-200 px-2 mb-2">قائمة المتسابقين المتميّزين</h3>
+                    ${restStudents.map((st, idx) => {
+                      const isNew = state.boardNewArrivalIds.has(String(st.id));
+                      return `
+                      <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl ${isNew ? 'bg-teal-500/20 border border-teal-400/50' : 'bg-white/5 border border-white/5'}">
+                        <div class="flex items-center gap-3 min-w-0">
+                          <span class="w-8 h-8 rounded-xl bg-white/10 text-white font-display font-extrabold text-sm grid place-items-center shrink-0">${idx + 4}</span>
+                          <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                              <p class="font-bold text-sm sm:text-base text-white truncate">${esc(st.studentName)}</p>
+                              ${isNew ? `<span class="px-2 py-0.5 rounded-full bg-teal-400 text-ink-900 text-[10px] font-extrabold">جديد</span>` : ''}
+                            </div>
+                            <p class="text-xs text-brand-200 truncate">${esc(st.grade)} — فصل ${esc(st.section)} ${st.durationSec ? `• ${svgIcon('clock', 12)} ${formatDuration(st.durationSec)}` : ''}</p>
+                          </div>
+                        </div>
+                        <div class="shrink-0 flex items-center gap-2">
+                          <span class="px-3 py-1 rounded-full text-xs font-extrabold ${Number(st.percentage) === 100 ? 'bg-gold-400 text-ink-900' : 'bg-brand-500/30 text-brand-100 border border-brand-400/30'}">
+                            ${st.totalCorrect}/${st.totalQuestions} (${st.percentage}%)
+                          </span>
+                        </div>
+                      </div>`;
+                    }).join('')}
+                  </div>
+                ` : ''}
+              `}
+            </div>
+
+            <!-- Right 4 Cols: Class League + Remote/Classroom Join QR Card -->
+            <div class="lg:col-span-4 space-y-6">
+              <!-- Class / Section League -->
+              <div class="bg-white/5 border border-white/10 rounded-3xl p-5 space-y-4">
+                <div class="flex items-center gap-2 text-gold-300">
+                  ${svgIcon('users', 20)}
+                  <h3 class="font-display font-extrabold text-base text-white">دوري الفصول المتنافسة</h3>
+                </div>
+                ${classLeague.length === 0 ? `
+                  <p class="text-xs text-brand-200">سيظهر ترتيب الفصول تلقائيًّا مع وصول أول نتيجة.</p>
+                ` : `
+                  <div class="space-y-3">
+                    ${classLeague.map((cls, idx) => `
+                      <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="text-xs font-extrabold text-white">${idx + 1}. ${esc(cls.label)}</span>
+                          <span class="text-sm font-extrabold text-gold-300">${cls.avgPct}%</span>
+                        </div>
+                        <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div class="h-full bg-gradient-to-l from-gold-400 to-teal-400 rounded-full transition-all duration-700" style="width: ${cls.avgPct}%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-brand-200">
+                          <span>المشاركون: ${cls.count} طالبًا</span>
+                          <span>أبطال 100%: ${cls.fullCount}</span>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+
+              <!-- Quick Join Card for Remote Students (Teams / Zoom) & Classroom -->
+              <div class="bg-white text-ink-900 rounded-3xl p-5 shadow-lift text-center space-y-3">
+                <span class="inline-block px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-extrabold">
+                  انضمام سريع للطلاب (حضوري وعن بُعد)
+                </span>
+                <h4 class="font-display font-extrabold text-base text-ink-900">
+                  ${activeBoardQuiz ? esc(activeBoardQuiz.lessonTitle) : 'منصّة التعلّم الذكي'}
+                </h4>
+                <div id="board-qr-box" data-join-url="${esc(joinUrl)}" class="w-40 h-40 mx-auto p-2 bg-white border-2 border-ink-100 rounded-2xl grid place-items-center"></div>
+                <p class="text-xs text-ink-500">امسح الرمز بكاميرا الجوّال أو انسخ الرابط لإرساله في دردشة الدرس:</p>
+                <div class="flex items-center gap-1.5 bg-ink-50 border border-ink-200 rounded-xl p-1.5">
+                  <input id="inp-board-join-url" readonly value="${esc(joinUrl)}" dir="ltr" class="flex-1 bg-transparent text-[11px] text-ink-700 outline-none px-1.5" />
+                  <button id="btn-copy-board-url" class="px-2.5 py-1.5 rounded-lg bg-brand-600 text-white text-[11px] font-bold hover:bg-brand-700 shrink-0">
+                    نسخ الرابط
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function renderLeaderboardQR() {
+      const box = document.getElementById('board-qr-box');
+      if (!box) return;
+      const url = box.getAttribute('data-join-url') || window.location.href.split('?')[0];
+      box.innerHTML = '';
+      if (window.QRCode) {
+        try {
+          new window.QRCode(box, { text: url, width: 140, height: 140, colorDark: '#14213d', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.M });
+        } catch {}
+      }
+    }
+
     // --------------------- G. TEACHER CONTROL PANEL ---------------------
     function renderTeacherPanel() {
       const {
@@ -1969,6 +2904,11 @@ ${gradeHint}
               </div>
             </div>
             <div class="flex items-center gap-2">
+              ${panelUnlocked ? `
+                <button id="btn-open-board-panel" class="px-3 py-1.5 rounded-xl bg-gold-50 text-gold-900 border border-gold-300 hover:bg-gold-100 text-xs font-extrabold flex items-center gap-1.5">
+                  ${svgIcon('trophy', 14, 'text-gold-600')} سبورة التنافس الحيّ
+                </button>
+              ` : ''}
               ${panelUnlocked && normalizeFirebaseUrl(d.firebaseUrl) ? `
                 <button id="btn-manual-cloud-sync" class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 ${cloudConnected ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-gold-50 text-gold-800 border border-gold-200'}">
                   ${svgIcon('cloud', 14)} ${cloudSyncing ? 'جارٍ المزامنة...' : 'مزامنة السحابة'}
@@ -1995,8 +2935,10 @@ ${gradeHint}
               ${[
                 { id: 'content', label: 'توليد درس جديد' },
                 { id: 'bank', label: `مكتبة الاختبارات (${quizBank.length})` },
+                { id: 'achievements', label: `إنجازات الطلاب (${state.studentAchievements.length})` },
                 { id: 'students', label: `الطلاب والفصول ${unlistedList.length ? `(${unlistedList.length} جديد)` : ''}` },
                 { id: 'results', label: 'سجلّ النتائج' },
+                { id: 'radar', label: 'رادار الفجوات والعلاج' },
                 { id: 'general', label: 'الإعدادات والشجرة' }
               ].map(t => `
                 <button data-tab="${t.id}" class="btn-panel-tab shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-t-lg transition border-b-2 -mb-px ${panelTab === t.id ? 'border-brand-600 text-brand-700' : 'border-transparent text-ink-400 hover:text-ink-700'}">
@@ -2196,6 +3138,113 @@ ${gradeHint}
                 `}
               ` : ''}
 
+              <!-- TAB: STUDENT ACHIEVEMENTS (STUDENT-GENERATED QUIZZES) -->
+              ${panelTab === 'achievements' ? (() => {
+                const achs = state.studentAchievements || [];
+                const activeAch = achs.find(a => a.id === state.previewAchievementId) || null;
+                const uniqueCreators = new Set(achs.map(a => a.studentName)).size;
+                return `
+                <div class="bg-gradient-to-l from-teal-50 to-brand-50 rounded-2xl border border-teal-200 p-4 flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-teal-600 text-white grid place-items-center shrink-0">${svgIcon('award', 22)}</div>
+                    <div>
+                      <h3 class="font-display font-extrabold text-base text-ink-900">إنجازات الطلاب — الاختبارات المُنشأة ذاتيًّا (${achs.length})</h3>
+                      <p class="text-xs text-ink-600">يظهر هنا كلّ اختبار يولّده الطالب من واجهته باسمه ومرحلته وصفّه لحظيًّا (${uniqueCreators} طالبًا مبدعًا)</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button id="btn-export-ach-csv" ${achs.length === 0 ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 disabled:opacity-50 flex items-center gap-1.5">
+                      ${svgIcon('download', 14)} تصدير الإنجازات (Excel)
+                    </button>
+                  </div>
+                </div>
+
+                ${achs.length === 0 ? `
+                  <div class="bg-white rounded-2xl border border-ink-100 p-10 text-center text-ink-400">
+                    <p class="text-sm font-bold text-ink-600 mb-1">لا توجد إنجازات طلابية مسجّلة بعد.</p>
+                    <p class="text-xs">عند تفعيل «وضع رفع الطالب المباشر» من الإعدادات، سيُحفظ كلّ درس يرفعه الطالب هنا باسمه وصفّه تلقائيًّا.</p>
+                  </div>
+                ` : `
+                  <div class="space-y-3">
+                    ${achs.map(ach => {
+                      const alreadyInBank = quizBank.some(q => q.id === ach.quiz?.id);
+                      return `
+                      <div class="bg-white rounded-2xl border ${activeAch?.id === ach.id ? 'border-teal-400 ring-2 ring-teal-100' : 'border-ink-100'} p-4 space-y-3">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                          <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                              <span class="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
+                                ${svgIcon('user', 12)} الطالب: ${esc(ach.studentName)}
+                              </span>
+                              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink-100 text-ink-700">${esc(ach.stage)} — ${esc(ach.grade)} (فصل ${esc(ach.section)})</span>
+                              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">${esc(ach.subject)}</span>
+                            </div>
+                            <h4 class="font-display font-bold text-base text-ink-900">الدرس: ${esc(ach.lessonTitle)} <span class="text-xs font-normal text-ink-400">(${ach.questionsCount} سؤالًا)</span></h4>
+                            <p class="text-[11px] text-ink-400 mt-0.5">تاريخ الإنشاء: ${esc(ach.date)}</p>
+                          </div>
+
+                          <div class="text-left shrink-0">
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold ${ach.completed ? (ach.percentage === 100 ? 'bg-gold-100 text-gold-800' : 'bg-teal-50 text-teal-700') : 'bg-ink-100 text-ink-500'}">
+                              ${ach.completed ? `الدرجة: ${esc(ach.scoreText)} (${ach.percentage}%)` : 'بانتظار إتمام الحل'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-2 border-t border-ink-100">
+                          <button data-preview-ach="${ach.id}" class="btn-preview-ach px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 text-xs font-bold hover:bg-brand-100 flex items-center gap-1">
+                            ${svgIcon('eye', 14)} معاينة الأسئلة
+                          </button>
+                          <button data-promote-ach="${ach.id}" ${alreadyInBank ? 'disabled' : ''} class="btn-promote-ach px-3 py-1.5 rounded-lg ${alreadyInBank ? 'bg-ink-100 text-ink-400' : 'bg-teal-600 text-white hover:bg-teal-700'} text-xs font-bold flex items-center gap-1">
+                            ${svgIcon('check', 14)} ${alreadyInBank ? 'معتمد في مكتبة الاختبارات' : 'اعتماد ونقل لمكتبة الاختبارات'}
+                          </button>
+                          <button data-pdf-ach="${ach.id}" class="btn-pdf-ach px-3 py-1.5 rounded-lg bg-gold-50 text-gold-800 text-xs font-bold hover:bg-gold-100 flex items-center gap-1">
+                            ${svgIcon('printer', 14)} تصدير PDF
+                          </button>
+                          <button data-share-ach="${ach.id}" class="btn-share-ach px-3 py-1.5 rounded-lg bg-ink-100 text-ink-700 text-xs font-bold hover:bg-ink-200 flex items-center gap-1">
+                            ${svgIcon('qr', 14)} باركود
+                          </button>
+                          <button data-del-ach="${ach.id}" class="btn-del-ach mr-auto p-1.5 rounded-lg text-rose-500 hover:bg-rose-50" title="حذف الإنجاز">
+                            ${svgIcon('trash', 15)}
+                          </button>
+                        </div>
+                      </div>`;
+                    }).join('')}
+                  </div>
+
+                  ${activeAch && activeAch.quiz ? `
+                    <div class="pt-4 border-t border-ink-200 space-y-3">
+                      <div class="flex items-center justify-between">
+                        <h4 class="font-display font-bold text-sm text-ink-800">معاينة أسئلة إنجاز الطالب (${esc(activeAch.studentName)}): «${esc(activeAch.lessonTitle)}»</h4>
+                        <button id="btn-close-ach-preview" class="text-xs text-ink-500 hover:underline">إغلاق المعاينة</button>
+                      </div>
+                      ${activeAch.quiz.questions.map((q, qi) => `
+                        <div class="bg-white rounded-2xl border border-ink-100 p-4">
+                          <div class="flex items-start gap-3">
+                            <span class="shrink-0 w-7 h-7 rounded-lg bg-ink-100 text-ink-600 grid place-items-center text-xs font-bold">${qi + 1}</span>
+                            <div class="flex-1 min-w-0">
+                              <div class="flex flex-wrap gap-1.5 mb-2">
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${levelColors[q.level]}">${levelNames[q.level]}</span>
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink-100 text-ink-600">${esc(q.bloom)}</span>
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink-100 text-ink-600">${esc(q.dok)}</span>
+                              </div>
+                              <p class="font-reading-naskh text-base font-bold text-ink-800">${esc(q.text)}</p>
+                              <div class="mt-2 space-y-1">
+                                ${q.options.map((opt, oi) => `
+                                  <div class="font-reading-naskh text-sm px-3 py-1 rounded-lg border ${q.correctIndex === oi ? 'border-teal-300 bg-teal-50 text-teal-800 font-bold' : 'border-ink-100 text-ink-600'}">
+                                    ${esc(opt)}
+                                  </div>
+                                `).join('')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                `}
+              `;
+              })() : ''}
+
               <!-- TAB 3: STUDENT ROSTER & EXCEL IMPORT & UNLISTED APPROVAL -->
               ${panelTab === 'students' ? `
                 ${unlistedList.length > 0 ? `
@@ -2352,13 +3401,25 @@ ${gradeHint}
                   <div class="space-y-2.5">
                     ${resultsLog.map(r => `
                       <div class="bg-white rounded-2xl border border-ink-100 p-4 flex items-center justify-between gap-3">
-                        <div class="min-w-0">
-                          <div class="flex items-center gap-2">
+                        <div class="min-w-0 flex-1">
+                          <div class="flex flex-wrap items-center gap-2">
                             <p class="text-sm font-bold text-ink-800 truncate">${esc(r.studentName)}</p>
                             ${r.wasUnlisted ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold-100 text-gold-800">غير موجود</span>` : ''}
+                            ${r.essayAppealed ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">طلب مراجعة مقالي</span>` : ''}
                           </div>
                           <p class="text-xs text-ink-500">${esc(r.stage || '')} — ${esc(r.grade)} — فصل ${esc(r.section)} | ${esc(r.subject)} (${esc(r.lessonTitle)})</p>
                           <p class="text-[11px] text-ink-400 mt-0.5">${esc(r.date)}</p>
+                          ${r.essayAnswerText ? `
+                            <div class="mt-2 p-2.5 rounded-xl bg-ink-50 border border-ink-200 text-xs">
+                              <span class="font-bold text-brand-700">إجابة المقالي (${r.essayScore ?? 0}/2):</span>
+                              <span class="text-ink-800">${esc(r.essayAnswerText)}</span>
+                              ${(r.essayScore ?? 0) < 2 ? `
+                                <button data-grant-essay="${r.id}" class="btn-grant-essay mr-2 px-2 py-0.5 rounded bg-teal-600 text-white text-[11px] font-bold hover:bg-teal-700">
+                                  منح الدرجة الكاملة للمقالي
+                                </button>
+                              ` : ''}
+                            </div>
+                          ` : ''}
                         </div>
                         <div class="text-left shrink-0">
                           <span class="inline-block px-3 py-1 rounded-full text-xs font-bold ${r.percentage === 100 ? 'bg-gold-100 text-gold-800' : 'bg-brand-50 text-brand-700'}">
@@ -2370,6 +3431,128 @@ ${gradeHint}
                   </div>
                 `}
               ` : ''}
+
+              <!-- TAB: DIAGNOSTIC SKILL GAP RADAR & REMEDIAL WORKSHEET -->
+              ${panelTab === 'radar' ? (() => {
+                const allLogs = loadResultsLog();
+                const filteredLogs = allLogs.filter(r => {
+                  if (state.radarStage !== 'ALL' && r.stage !== state.radarStage) return false;
+                  if (state.radarGrade !== 'ALL' && r.grade !== state.radarGrade) return false;
+                  if (state.radarSection !== 'ALL' && r.section !== state.radarSection) return false;
+                  if (state.radarLesson !== 'ALL' && r.lessonTitle !== state.radarLesson) return false;
+                  return true;
+                });
+                const uniqueLessons = Array.from(new Set(allLogs.map(r => r.lessonTitle).filter(Boolean)));
+                const radarGrades = state.radarStage !== 'ALL' ? getGradesForStage(tree, state.radarStage) : [];
+                const radarSections = (state.radarStage !== 'ALL' && state.radarGrade !== 'ALL') ? getSectionsForGrade(tree, state.radarStage, state.radarGrade) : [];
+                const analytics = computeSkillGapAnalytics(filteredLogs);
+
+                return `
+                <div class="bg-gradient-to-l from-brand-50 to-rose-50/60 rounded-2xl border border-brand-200 p-4 space-y-3">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-10 h-10 rounded-xl bg-brand-600 text-white grid place-items-center">${svgIcon('radar', 20)}</div>
+                      <div>
+                        <h3 class="font-display font-extrabold text-base text-ink-900">رادار تشخيص الفجوات المهارية وورقة العلاج</h3>
+                        <p class="text-xs text-ink-600">يحلّل إجابات (${filteredLogs.length}) محاولة ويرصد أكثر المهارات إخفاقًا لتوليد ورقة عمل علاجية</p>
+                      </div>
+                    </div>
+                    <button id="btn-gen-remedial" ${state.remedialBusy || filteredLogs.length === 0 ? 'disabled' : ''}
+                      class="px-4 py-2.5 rounded-xl bg-gradient-to-l from-rose-600 to-brand-600 text-white text-xs font-bold hover:shadow-lift transition disabled:opacity-50 flex items-center gap-1.5">
+                      ${state.remedialBusy
+                        ? `<span class="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span> جارٍ بناء الورقة العلاجية...`
+                        : `${svgIcon('wand', 15)} توليد ورقة عمل علاجية ذكية للفجوات`}
+                    </button>
+                  </div>
+
+                  <!-- Filters -->
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                    <select id="sel-radar-stage" class="px-2.5 py-2 rounded-xl border border-ink-200 bg-white text-xs font-bold">
+                      <option value="ALL">كلّ المراحل</option>
+                      ${tree.map(s => `<option value="${esc(s.name)}" ${state.radarStage === s.name ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+                    </select>
+                    <select id="sel-radar-grade" class="px-2.5 py-2 rounded-xl border border-ink-200 bg-white text-xs font-bold">
+                      <option value="ALL">كلّ الصفوف</option>
+                      ${radarGrades.map(g => `<option value="${esc(g.name)}" ${state.radarGrade === g.name ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                    </select>
+                    <select id="sel-radar-section" class="px-2.5 py-2 rounded-xl border border-ink-200 bg-white text-xs font-bold">
+                      <option value="ALL">كلّ الفصول</option>
+                      ${radarSections.map(sec => `<option value="${esc(sec)}" ${state.radarSection === sec ? 'selected' : ''}>فصل ${esc(sec)}</option>`).join('')}
+                    </select>
+                    <select id="sel-radar-lesson" class="px-2.5 py-2 rounded-xl border border-ink-200 bg-white text-xs font-bold">
+                      <option value="ALL">كلّ الدروس</option>
+                      ${uniqueLessons.map(ls => `<option value="${esc(ls)}" ${state.radarLesson === ls ? 'selected' : ''}>${esc(ls)}</option>`).join('')}
+                    </select>
+                  </div>
+                  ${state.remedialError ? `<p class="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">${esc(state.remedialError)}</p>` : ''}
+                </div>
+
+                ${filteredLogs.length === 0 ? `
+                  <div class="bg-white rounded-2xl border border-ink-100 p-10 text-center text-ink-400">
+                    <p class="text-sm font-bold text-ink-600">لا توجد نتائج مطابقة للتصفية الحالية.</p>
+                  </div>
+                ` : `
+                  <!-- Cognitive Levels Mastery Bars -->
+                  <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                    <h4 class="font-display font-bold text-sm text-ink-800">مؤشّر إتقان المستويات المعرفية الثلاثة</h4>
+                    <div class="space-y-3">
+                      ${analytics.levelsSummary.map(ls => {
+                        const pct = ls.pct ?? 0;
+                        const statusCls = ls.pct == null ? 'bg-ink-100 text-ink-500' : pct >= 80 ? 'bg-teal-50 text-teal-700' : pct >= 60 ? 'bg-gold-50 text-gold-800' : 'bg-rose-50 text-rose-700';
+                        const barCls = pct >= 80 ? 'bg-teal-500' : pct >= 60 ? 'bg-gold-500' : 'bg-rose-500';
+                        const statusText = ls.pct == null ? 'لا توجد بيانات' : pct >= 80 ? 'إتقان مرتفع' : pct >= 60 ? 'بحاجة لتعزيز' : 'فجوة مهارية حرجة';
+                        return `
+                          <div class="p-3 rounded-xl bg-ink-50/70 border border-ink-100">
+                            <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                              <span class="text-ink-800">${ls.name}</span>
+                              <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-full text-[11px] ${statusCls}">${statusText}</span>
+                                <span class="text-ink-900">${ls.pct != null ? pct + '%' : '—'}</span>
+                              </div>
+                            </div>
+                            <div class="h-2 bg-ink-200 rounded-full overflow-hidden">
+                              <div class="h-full ${barCls} transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                          </div>`;
+                      }).join('')}
+                    </div>
+                  </div>
+
+                  <!-- Weakest Skills & Questions List -->
+                  <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                    <h4 class="font-display font-bold text-sm text-ink-800">رصد الفجوات التفصيلية (أكثر الأسئلة والمهارات إخفاقًا)</h4>
+                    ${analytics.weakQuestions.length === 0 ? `
+                      <p class="text-xs text-ink-500 bg-ink-50 rounded-xl p-4 text-center">التحليل التفصيلي للأسئلة متاح تلقائيًّا لجميع الاختبارات التي تُحلّ بدءًا من هذه النسخة.</p>
+                    ` : `
+                      <div class="space-y-2.5">
+                        ${analytics.weakQuestions.slice(0, 8).map((wq, idx) => `
+                          <div class="p-3 rounded-xl border ${wq.masteryPct < 60 ? 'border-rose-200 bg-rose-50/40' : wq.masteryPct < 80 ? 'border-gold-200 bg-gold-50/40' : 'border-ink-100 bg-ink-50/40'}">
+                            <div class="flex items-start justify-between gap-2">
+                              <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap gap-1.5 mb-1">
+                                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-ink-200 text-ink-700">#${idx + 1}</span>
+                                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-50 text-brand-700">${esc(wq.bloom)} | ${esc(wq.dok)}</span>
+                                  <span class="text-[10px] text-ink-500">(${esc(wq.lessonTitle)})</span>
+                                </div>
+                                <p class="font-reading-naskh text-sm font-bold text-ink-900">${esc(wq.text)}</p>
+                                ${wq.missedStudents.length > 0 ? `
+                                  <p class="text-[11px] text-rose-700 mt-1">الطلاب المتعثّرون: ${esc(wq.missedStudents.slice(0, 6).join('، '))}${wq.missedStudents.length > 6 ? '...' : ''}</p>
+                                ` : ''}
+                              </div>
+                              <div class="shrink-0 text-left">
+                                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold ${wq.masteryPct < 60 ? 'bg-rose-100 text-rose-800' : wq.masteryPct < 80 ? 'bg-gold-100 text-gold-800' : 'bg-teal-100 text-teal-800'}">
+                                  نسبة الإخفاق: ${wq.errorRate}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    `}
+                  </div>
+                `}
+              `;
+              })() : ''}
 
               <!-- TAB 5: GENERAL SETTINGS & ACADEMIC TREE -->
               ${panelTab === 'general' ? `
@@ -2550,6 +3733,12 @@ ${gradeHint}
                     <input id="inp-q-per-lvl" type="range" min="3" max="10" value="${d.questionsPerLevel}" class="w-full accent-brand-600" />
                   </div>
                   <div class="flex items-center justify-between gap-3 pt-1">
+                    <span class="text-sm text-ink-700">تضمين سؤال مقالي تحليلي في نهاية المستوى الثالث (يُصحَّح آليًّا بعدل)</span>
+                    <button id="btn-toggle-essay" class="w-11 h-6 rounded-full transition relative ${d.includeEssayQuestion !== false ? 'bg-teal-600' : 'bg-ink-200'}">
+                      <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${d.includeEssayQuestion !== false ? 'left-0.5' : 'right-0.5'}"></span>
+                    </button>
+                  </div>
+                  <div class="flex items-center justify-between gap-3 pt-1">
                     <span class="text-sm text-ink-700">وضع رفع الطالب المباشر</span>
                     <button id="btn-toggle-direct" class="w-11 h-6 rounded-full transition relative ${d.directUploadMode ? 'bg-brand-600' : 'bg-ink-200'}">
                       <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${d.directUploadMode ? 'left-0.5' : 'right-0.5'}"></span>
@@ -2662,24 +3851,48 @@ ${gradeHint}
         state.student.wasUnlisted = wasUnlisted;
         state.activeQuiz = targetQuiz;
         state.activeRunQuiz = buildShuffledRunQuiz(targetQuiz);
+        state.quizStartedAt = Date.now();
         state.qIndex = 0;
         state.selectedOption = null;
+        state.essayDraft = '';
+        state.essayAppealUsed = false;
+        state.lastEssayEval = null;
         state.revealed = false;
         state.answers = [];
         state.phase = 'quiz';
         render();
       };
 
+      function validateStudentBeforeDirectUpload() {
+        const classStudents = state.roster[rosterKey(state.student.stage, state.student.grade, state.student.section)] || [];
+        const hasClassList = classStudents.length > 0;
+        const wasUnlisted = hasClassList && state.student.selectedFromList === '__UNLISTED__';
+        const finalName = (!hasClassList || wasUnlisted) ? state.student.typedName.trim() : state.student.selectedFromList.trim();
+        if (!state.student.stage || !state.student.grade || !state.student.section || !finalName) {
+          state.touched = true;
+          state.errorMsg = 'فضلاً اختر المرحلة والصفّ والفصل واسمك الثلاثي في الأعلى أولًا قبل رفع الدرس أو تصويره.';
+          render();
+          return null;
+        }
+        return { finalName, wasUnlisted };
+      }
+
       const btnDirectFile = document.getElementById('btn-direct-file');
       const inpDirectFile = document.getElementById('inp-direct-file');
       if (btnDirectFile && inpDirectFile) {
-        btnDirectFile.onclick = () => inpDirectFile.click();
+        btnDirectFile.onclick = () => {
+          if (!validateStudentBeforeDirectUpload()) return;
+          inpDirectFile.click();
+        };
         inpDirectFile.onchange = async e => {
           const files = e.target.files;
           if (!files || !files.length) return;
+          const stCheck = validateStudentBeforeDirectUpload();
+          if (!stCheck) return;
+
           state.errorMsg = '';
           state.busy = true;
-          state.statusMsg = 'جارٍ قراءة الملف وتحليله...';
+          state.statusMsg = 'جارٍ تحليل الدرس وتوثيق إنجازك باسمك...';
           render();
           try {
             const ingested = [];
@@ -2690,6 +3903,34 @@ ${gradeHint}
               { subject: SUBJECT_OPTIONS[0], stage: state.student.stage, grade: state.student.grade },
               msg => { state.statusMsg = msg; render(); }
             );
+
+            const achId = 'ach-' + Date.now().toString(36);
+            generated.achievementId = achId;
+            generated.createdByStudent = stCheck.finalName;
+            generated.stage = state.student.stage;
+            generated.grade = state.student.grade;
+            generated.section = state.student.section;
+
+            const achEntry = {
+              id: achId,
+              createdAt: Date.now(),
+              date: new Date().toLocaleString('ar-SA'),
+              studentName: stCheck.finalName,
+              stage: state.student.stage,
+              grade: state.student.grade,
+              section: state.student.section,
+              wasUnlisted: stCheck.wasUnlisted,
+              subject: generated.subject || 'عام',
+              lessonTitle: generated.lessonTitle,
+              sourceSummary: generated.sourceSummary || '',
+              questionsCount: generated.questions.length,
+              quiz: generated,
+              completed: false,
+              scoreText: 'لم يُحلّ بعد',
+              percentage: null
+            };
+            await recordStudentAchievement(achEntry);
+
             sfx.click();
             state.pendingDirectQuiz = generated;
           } catch (err) {
@@ -2704,7 +3945,10 @@ ${gradeHint}
       const btnDirectCam = document.getElementById('btn-direct-cam');
       const inpDirectCam = document.getElementById('inp-direct-cam');
       if (btnDirectCam && inpDirectCam) {
-        btnDirectCam.onclick = () => inpDirectCam.click();
+        btnDirectCam.onclick = () => {
+          if (!validateStudentBeforeDirectUpload()) return;
+          inpDirectCam.click();
+        };
         inpDirectCam.onchange = inpDirectFile ? inpDirectFile.onchange : null;
       }
 
@@ -2740,11 +3984,71 @@ ${gradeHint}
           const correct = idx === q.correctIndex;
           state.selectedOption = idx;
           state.revealed = true;
-          state.answers.push({ questionId: q.id, selectedIndex: idx, correct });
+          state.answers.push({ questionId: q.id, selectedIndex: idx, correct, earnedPoints: correct ? 1 : 0, maxPoints: 1 });
           if (correct) sfx.correct(); else sfx.wrong();
           render();
         };
       });
+
+      const txtEssay = document.getElementById('txt-essay-answer');
+      if (txtEssay) txtEssay.oninput = e => {
+        state.essayDraft = e.target.value;
+        const submitBtn = document.getElementById('btn-submit-essay');
+        if (submitBtn) submitBtn.disabled = state.essayGradingBusy || !state.essayDraft.trim();
+      };
+
+      const btnSubmitEssay = document.getElementById('btn-submit-essay');
+      if (btnSubmitEssay) btnSubmitEssay.onclick = async () => {
+        if (state.revealed || state.essayGradingBusy || !state.essayDraft.trim()) return;
+        const activeQuiz = state.activeRunQuiz || state.activeQuiz;
+        const q = activeQuiz.questions[state.qIndex];
+        state.essayGradingBusy = true;
+        render();
+        try {
+          const evalRes = await gradeEssayAnswer(q, state.essayDraft.trim(), false);
+          state.lastEssayEval = evalRes;
+          state.revealed = true;
+          state.answers.push({
+            questionId: q.id,
+            essayText: state.essayDraft.trim(),
+            correct: evalRes.score >= 1,
+            earnedPoints: evalRes.score,
+            maxPoints: 2,
+            appealed: false
+          });
+          if (evalRes.score >= 1) sfx.correct(); else sfx.wrong();
+        } finally {
+          state.essayGradingBusy = false;
+          render();
+        }
+      };
+
+      const btnAppealEssay = document.getElementById('btn-appeal-essay');
+      if (btnAppealEssay) btnAppealEssay.onclick = async () => {
+        if (state.essayGradingBusy || state.essayAppealUsed) return;
+        const activeQuiz = state.activeRunQuiz || state.activeQuiz;
+        const q = activeQuiz.questions[state.qIndex];
+        state.essayGradingBusy = true;
+        render();
+        try {
+          const reEval = await gradeEssayAnswer(q, state.essayDraft.trim(), true);
+          // Fairness rule: never lower the student's previous score on appeal!
+          const prevScore = state.lastEssayEval?.score || 0;
+          const finalScore = Math.max(prevScore, reEval.score);
+          state.lastEssayEval = { ...reEval, score: finalScore, appealed: true };
+          state.essayAppealUsed = true;
+          const ansIdx = state.answers.findIndex(a => a.questionId === q.id);
+          if (ansIdx >= 0) {
+            state.answers[ansIdx].earnedPoints = finalScore;
+            state.answers[ansIdx].correct = finalScore >= 1;
+            state.answers[ansIdx].appealed = true;
+          }
+          if (finalScore >= 1) sfx.correct();
+        } finally {
+          state.essayGradingBusy = false;
+          render();
+        }
+      };
 
       const btnNextQ = document.getElementById('btn-next-q');
       if (btnNextQ) btnNextQ.onclick = () => {
@@ -2754,11 +4058,13 @@ ${gradeHint}
           const qs = activeQuiz.questions;
           const levelResults = [1, 2, 3].map(lvl => {
             const lvlQs = qs.filter(q => q.level === lvl);
+            const lvlMax = lvlQs.reduce((s, qq) => s + (qq.maxPoints || (qq.type === 'essay' ? 2 : 1)), 0);
             const lvlAns = state.answers.filter(a => lvlQs.find(q => q.id === a.questionId));
-            return { level: lvl, correct: lvlAns.filter(a => a.correct).length, total: lvlQs.length };
+            const lvlEarned = lvlAns.reduce((s, a) => s + (a.earnedPoints !== undefined ? a.earnedPoints : (a.correct ? 1 : 0)), 0);
+            return { level: lvl, correct: lvlEarned, total: lvlMax };
           });
-          const totalCorrect = state.answers.filter(a => a.correct).length;
-          const totalQuestions = qs.length;
+          const totalCorrect = levelResults.reduce((s, lr) => s + lr.correct, 0);
+          const totalQuestions = levelResults.reduce((s, lr) => s + lr.total, 0);
           const percentage = totalQuestions ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
           const completedAt = Date.now();
 
@@ -2769,6 +4075,29 @@ ${gradeHint}
             section: state.student.section
           };
 
+          const questionBreakdown = qs.map(qq => {
+            const ans = state.answers.find(a => a.questionId === qq.id);
+            const maxP = qq.maxPoints || (qq.type === 'essay' ? 2 : 1);
+            const earnP = ans ? (ans.earnedPoints !== undefined ? ans.earnedPoints : (ans.correct ? maxP : 0)) : 0;
+            return {
+              questionId: qq.id,
+              text: qq.text,
+              level: qq.level,
+              type: qq.type || 'mcq',
+              bloom: qq.bloom || '',
+              dok: qq.dok || '',
+              options: qq.options || [],
+              correctIndex: qq.correctIndex ?? 0,
+              modelAnswer: qq.modelAnswer || '',
+              explanation: qq.explanation || '',
+              correct: earnP === maxP,
+              earnedPoints: earnP,
+              maxPoints: maxP
+            };
+          });
+
+          const essayAnsObj = state.answers.find(a => a.essayText !== undefined);
+
           state.result = {
             student: stSnapshot,
             quiz: activeQuiz,
@@ -2776,6 +4105,7 @@ ${gradeHint}
             totalCorrect,
             totalQuestions,
             percentage,
+            durationSec: state.quizStartedAt ? Math.max(1, Math.round((completedAt - state.quizStartedAt) / 1000)) : null,
             completedAt
           };
 
@@ -2794,7 +4124,11 @@ ${gradeHint}
             lvl3: `${levelResults[2].correct}/${levelResults[2].total}`,
             totalCorrect,
             totalQuestions,
-            percentage
+            percentage,
+            essayAnswerText: essayAnsObj ? essayAnsObj.essayText : '',
+            essayScore: essayAnsObj ? essayAnsObj.earnedPoints : null,
+            essayAppealed: essayAnsObj ? Boolean(essayAnsObj.appealed) : false,
+            questionBreakdown
           };
 
           appendResultLog(logEntry);
@@ -2803,11 +4137,37 @@ ${gradeHint}
             fbRequest(fbBase, 'results', 'POST', logEntry).catch(() => {});
           }
 
+          if (activeQuiz.achievementId) {
+            const existingAch = state.studentAchievements.find(a => a.id === activeQuiz.achievementId);
+            const updatedAch = {
+              ...(existingAch || {
+                id: activeQuiz.achievementId,
+                createdAt: completedAt,
+                date: new Date(completedAt).toLocaleString('ar-SA'),
+                studentName: stSnapshot.name,
+                stage: stSnapshot.stage,
+                grade: stSnapshot.grade,
+                section: stSnapshot.section,
+                subject: activeQuiz.subject || 'عام',
+                lessonTitle: activeQuiz.lessonTitle,
+                questionsCount: totalQuestions,
+                quiz: state.activeQuiz
+              }),
+              completed: true,
+              scoreText: `${totalCorrect}/${totalQuestions}`,
+              percentage
+            };
+            recordStudentAchievement(updatedAch);
+          }
+
           sfx.complete();
           state.phase = 'certificate';
         } else {
           state.qIndex += 1;
           state.selectedOption = null;
+          state.essayDraft = '';
+          state.essayAppealUsed = false;
+          state.lastEssayEval = null;
           state.revealed = false;
         }
         render();
@@ -2820,8 +4180,12 @@ ${gradeHint}
       if (btnCertRetake) btnCertRetake.onclick = () => {
         sfx.click();
         state.activeRunQuiz = buildShuffledRunQuiz(state.activeQuiz);
+        state.quizStartedAt = Date.now();
         state.qIndex = 0;
         state.selectedOption = null;
+        state.essayDraft = '';
+        state.essayAppealUsed = false;
+        state.lastEssayEval = null;
         state.revealed = false;
         state.answers = [];
         state.phase = 'quiz';
@@ -2910,6 +4274,57 @@ ${gradeHint}
         render();
       };
 
+      // --- Live Competition Leaderboard Events ---
+      const btnOpenBoardHome = document.getElementById('btn-open-board-home');
+      const btnOpenBoardPanel = document.getElementById('btn-open-board-panel');
+      if (btnOpenBoardHome) btnOpenBoardHome.onclick = () => { sfx.click(); openLiveLeaderboard(); };
+      if (btnOpenBoardPanel) btnOpenBoardPanel.onclick = () => { sfx.click(); openLiveLeaderboard(); };
+
+      const btnExitBoard = document.getElementById('btn-exit-board');
+      if (btnExitBoard) btnExitBoard.onclick = () => {
+        stopBoardPolling();
+        state.boardPresentationMode = false;
+        state.phase = 'onboarding';
+        render();
+      };
+
+      const btnBoardPresent = document.getElementById('btn-board-present');
+      const btnBoardExitPresent = document.getElementById('btn-board-exit-present');
+      if (btnBoardPresent) btnBoardPresent.onclick = () => { state.boardPresentationMode = true; render(); };
+      if (btnBoardExitPresent) btnBoardExitPresent.onclick = () => { state.boardPresentationMode = false; render(); };
+
+      const btnBoardFs = document.getElementById('btn-board-fullscreen');
+      if (btnBoardFs) btnBoardFs.onclick = () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+        else document.exitFullscreen?.().catch(() => {});
+      };
+
+      const btnBoardRefresh = document.getElementById('btn-board-refresh');
+      if (btnBoardRefresh) btnBoardRefresh.onclick = () => { sfx.click(); refreshLeaderboardData(true); };
+
+      const selBoardScope = document.getElementById('sel-board-scope');
+      if (selBoardScope) selBoardScope.onchange = e => { state.boardTimeScope = e.target.value; render(); };
+
+      const selBoardStage = document.getElementById('sel-board-stage');
+      if (selBoardStage) selBoardStage.onchange = e => { state.boardStage = e.target.value; state.boardGrade = 'ALL'; render(); };
+
+      const selBoardGrade = document.getElementById('sel-board-grade');
+      if (selBoardGrade) selBoardGrade.onchange = e => { state.boardGrade = e.target.value; render(); };
+
+      const selBoardLesson = document.getElementById('sel-board-lesson');
+      if (selBoardLesson) selBoardLesson.onchange = e => { state.boardLesson = e.target.value; render(); };
+
+      const btnCopyBoardUrl = document.getElementById('btn-copy-board-url');
+      if (btnCopyBoardUrl) btnCopyBoardUrl.onclick = () => {
+        const inp = document.getElementById('inp-board-join-url');
+        if (inp) {
+          inp.select();
+          navigator.clipboard?.writeText(inp.value);
+          btnCopyBoardUrl.textContent = 'تمّ النسخ ✓';
+          setTimeout(() => render(), 1200);
+        }
+      };
+
       const btnOpenPanel = document.getElementById('btn-open-panel');
       if (btnOpenPanel) btnOpenPanel.onclick = () => {
         state.panelOpen = true;
@@ -2961,7 +4376,7 @@ ${gradeHint}
           sfx.click();
           state.panelTab = b.getAttribute('data-tab');
           state.errorMsg = '';
-          if ((state.panelTab === 'results' || state.panelTab === 'students') && normalizeFirebaseUrl(state.settings.firebaseUrl)) {
+          if ((state.panelTab === 'results' || state.panelTab === 'students' || state.panelTab === 'achievements' || state.panelTab === 'radar') && normalizeFirebaseUrl(state.settings.firebaseUrl)) {
             pullCloudResultsAndUnlisted().then(() => render());
           }
           render();
@@ -3129,6 +4544,68 @@ ${gradeHint}
           state.quizBank = state.quizBank.filter(q => q.id !== id);
           saveQuizBank(state.quizBank);
           if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+          render();
+        };
+      });
+
+      // --- Student Achievements Tab Events ---
+      const btnExportAchCsv = document.getElementById('btn-export-ach-csv');
+      if (btnExportAchCsv) btnExportAchCsv.onclick = () => { sfx.click(); exportAchievementsCSV(); };
+
+      document.querySelectorAll('.btn-preview-ach').forEach(b => {
+        b.onclick = () => {
+          state.previewAchievementId = b.getAttribute('data-preview-ach');
+          sfx.click();
+          render();
+        };
+      });
+
+      const btnCloseAchPrev = document.getElementById('btn-close-ach-preview');
+      if (btnCloseAchPrev) btnCloseAchPrev.onclick = () => { state.previewAchievementId = ''; render(); };
+
+      document.querySelectorAll('.btn-promote-ach').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-promote-ach');
+          const ach = state.studentAchievements.find(a => a.id === id);
+          if (!ach || !ach.quiz) return;
+          if (!state.quizBank.some(q => q.id === ach.quiz.id)) {
+            const promotedQuiz = {
+              ...ach.quiz,
+              isAvailable: true,
+              lessonTitle: `${ach.lessonTitle} (إعداد الطالب: ${ach.studentName})`
+            };
+            state.quizBank.unshift(promotedQuiz);
+            saveQuizBank(state.quizBank);
+            if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+          }
+          sfx.click();
+          render();
+        };
+      });
+
+      document.querySelectorAll('.btn-pdf-ach').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-pdf-ach');
+          const ach = state.studentAchievements.find(a => a.id === id);
+          if (ach?.quiz) { state.pdfChoiceQuiz = ach.quiz; sfx.click(); render(); }
+        };
+      });
+
+      document.querySelectorAll('.btn-share-ach').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-share-ach');
+          const ach = state.studentAchievements.find(a => a.id === id);
+          if (ach?.quiz) { state.shareModalQuiz = ach.quiz; sfx.click(); render(); }
+        };
+      });
+
+      document.querySelectorAll('.btn-del-ach').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-del-ach');
+          state.studentAchievements = state.studentAchievements.filter(a => a.id !== id);
+          saveStudentAchievements(state.studentAchievements);
+          const fbBase = normalizeFirebaseUrl(state.settings.firebaseUrl);
+          if (fbBase) fbRequest(fbBase, `studentAchievements/${id}`, 'DELETE').catch(() => {});
           render();
         };
       });
@@ -3383,6 +4860,84 @@ ${gradeHint}
       const btnClearResults = document.getElementById('btn-clear-results');
       if (btnClearResults) btnClearResults.onclick = () => { clearResultsLog(); render(); };
 
+      // Teacher Essay Full-Credit Fairness Override in Results Log
+      document.querySelectorAll('.btn-grant-essay').forEach(b => {
+        b.onclick = () => {
+          const rid = Number(b.getAttribute('data-grant-essay'));
+          const logs = loadResultsLog().map(r => {
+            if (r.id === rid && r.essayScore != null && r.essayScore < 2) {
+              const diff = 2 - r.essayScore;
+              const newTotal = (r.totalCorrect || 0) + diff;
+              const newPct = r.totalQuestions ? Math.round((newTotal / r.totalQuestions) * 100) : r.percentage;
+              let newLvl3 = r.lvl3;
+              if (r.lvl3 && r.lvl3.includes('/')) {
+                const [e3, m3] = r.lvl3.split('/').map(Number);
+                newLvl3 = `${Math.min(m3, e3 + diff)}/${m3}`;
+              }
+              return { ...r, essayScore: 2, essayAppealed: false, totalCorrect: newTotal, percentage: newPct, lvl3: newLvl3 };
+            }
+            return r;
+          });
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(logs));
+          sfx.click();
+          render();
+        };
+      });
+
+      // Skill Gap Radar Filters & Remedial Worksheet Generator
+      const selRadarStage = document.getElementById('sel-radar-stage');
+      if (selRadarStage) selRadarStage.onchange = e => {
+        state.radarStage = e.target.value;
+        state.radarGrade = 'ALL';
+        state.radarSection = 'ALL';
+        render();
+      };
+      const selRadarGrade = document.getElementById('sel-radar-grade');
+      if (selRadarGrade) selRadarGrade.onchange = e => {
+        state.radarGrade = e.target.value;
+        state.radarSection = 'ALL';
+        render();
+      };
+      const selRadarSection = document.getElementById('sel-radar-section');
+      if (selRadarSection) selRadarSection.onchange = e => { state.radarSection = e.target.value; render(); };
+
+      const selRadarLesson = document.getElementById('sel-radar-lesson');
+      if (selRadarLesson) selRadarLesson.onchange = e => { state.radarLesson = e.target.value; render(); };
+
+      const btnGenRemedial = document.getElementById('btn-gen-remedial');
+      if (btnGenRemedial) btnGenRemedial.onclick = async () => {
+        state.remedialError = '';
+        state.remedialBusy = true;
+        render();
+        try {
+          const allLogs = loadResultsLog();
+          const filtered = allLogs.filter(r => {
+            if (state.radarStage !== 'ALL' && r.stage !== state.radarStage) return false;
+            if (state.radarGrade !== 'ALL' && r.grade !== state.radarGrade) return false;
+            if (state.radarSection !== 'ALL' && r.section !== state.radarSection) return false;
+            if (state.radarLesson !== 'ALL' && r.lessonTitle !== state.radarLesson) return false;
+            return true;
+          });
+          const analytics = computeSkillGapAnalytics(filtered);
+          const worksheet = await generateRemedialWorksheet(analytics.weakQuestions, {
+            stage: state.radarStage,
+            grade: state.radarGrade,
+            section: state.radarSection,
+            lesson: state.radarLesson
+          });
+          state.printExamQuiz = worksheet;
+          state.printExamMode = 'student';
+          state.panelOpen = false;
+          state.phase = 'printExam';
+          sfx.click();
+        } catch (err) {
+          state.remedialError = err.message || 'تعذّر توليد ورقة العمل العلاجية.';
+        } finally {
+          state.remedialBusy = false;
+          render();
+        }
+      };
+
       const d = state.draftSettings;
       if (d) {
         const bindVal = (id, key) => { const el = document.getElementById(id); if (el) el.oninput = e => { d[key] = e.target.value; }; };
@@ -3410,6 +4965,9 @@ ${gradeHint}
 
         const qRange = document.getElementById('inp-q-per-lvl');
         if (qRange) qRange.oninput = e => { d.questionsPerLevel = Number(e.target.value); render(); };
+
+        const btnEssayToggle = document.getElementById('btn-toggle-essay');
+        if (btnEssayToggle) btnEssayToggle.onclick = () => { d.includeEssayQuestion = d.includeEssayQuestion === false ? true : false; render(); };
 
         const btnDirect = document.getElementById('btn-toggle-direct');
         if (btnDirect) btnDirect.onclick = () => { d.directUploadMode = !d.directUploadMode; render(); };
@@ -3538,6 +5096,13 @@ ${gradeHint}
           if (localMatch.stage) state.student.stage = localMatch.stage;
           if (localMatch.grade) state.student.grade = localMatch.grade;
         }
+      }
+      const isBoardMode = params.get('board') === '1' && !IS_STUDENT_EXPORT;
+      if (isBoardMode) {
+        openLiveLeaderboard();
+        await pullCloudDataForStudent(targetQuizId);
+        await refreshLeaderboardData(false);
+        return;
       }
       render();
       await pullCloudDataForStudent(targetQuizId);
