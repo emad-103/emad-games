@@ -1,0 +1,3548 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta name="emad-cloud-signature" data-slug="mnsh_altalm_aldhky" data-fp="da281885e18349bd9e484652e2f1fe82dfe0109adbeccdadfe4c1307dcf57c5c" content="emad-said-mohamed-0507825450" />
+  <script id="emad-cloud-auto-bridge">
+(function(){
+  var DB_BASE = "https://emad-smart-planner-default-rtdb.firebaseio.com";
+  var APP_ID = "mnsh_altalm_aldhky";
+  var APP_URL = "https://emad-smart-planner-default-rtdb.firebaseio.com/apps/mnsh_altalm_aldhky";
+  var MODE_TYPE = "rest_platform";
+
+  window.__EMAD_CLOUD_CONFIG__ = { dbBase: DB_BASE, appId: APP_ID, appUrl: APP_URL, mode: MODE_TYPE, fp: "da281885e18349bd9e484652e2f1fe82dfe0109adbeccdadfe4c1307dcf57c5c" };
+
+  if (MODE_TYPE === "rest_platform") {
+    try {
+      var sKey = "edu.settings.v4";
+      var rawS = localStorage.getItem(sKey);
+      var parsedS = rawS ? JSON.parse(rawS) : {};
+      if (!parsedS.firebaseUrl) {
+        parsedS.firebaseUrl = APP_URL;
+        localStorage.setItem(sKey, JSON.stringify(parsedS));
+      }
+    } catch (e) {}
+  }
+
+  window.CloudDB = {
+    save: function(subPath, data) {
+      return fetch(APP_URL + "/data/" + subPath + ".json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+    },
+    load: function(subPath) {
+      return fetch(APP_URL + "/data" + (subPath ? "/" + subPath : "") + ".json").then(function(r){ return r.json(); });
+    },
+    getShared: function() {
+      return fetch(DB_BASE + "/shared_data.json").then(function(r){ return r.json(); });
+    }
+  };
+
+  if (MODE_TYPE === "local_sync") {
+    var syncTimer = null;
+    var isHydrating = false;
+    var origSetItem = Storage.prototype.setItem;
+    var origRemoveItem = Storage.prototype.removeItem;
+
+    function pushLocalSnapshot() {
+      if (isHydrating) return;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(function() {
+        var snapshot = {};
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf("emad_") !== 0) {
+            snapshot[k] = localStorage.getItem(k);
+          }
+        }
+        fetch(APP_URL + "/local_state.json", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ updatedAt: Date.now(), keys: snapshot })
+        }).catch(function(){});
+      }, 700);
+    }
+
+    Storage.prototype.setItem = function(k, v) {
+      origSetItem.apply(this, arguments);
+      if (this === window.localStorage) pushLocalSnapshot();
+    };
+    Storage.prototype.removeItem = function(k) {
+      origRemoveItem.apply(this, arguments);
+      if (this === window.localStorage) pushLocalSnapshot();
+    };
+
+    fetch(APP_URL + "/local_state.json")
+      .then(function(r){ return r.json(); })
+      .then(function(remote) {
+        if (remote && remote.keys && typeof remote.keys === "object") {
+          var changed = false;
+          isHydrating = true;
+          Object.keys(remote.keys).forEach(function(k) {
+            if (localStorage.getItem(k) !== remote.keys[k]) {
+              origSetItem.call(localStorage, k, remote.keys[k]);
+              changed = true;
+            }
+          });
+          isHydrating = false;
+          if (changed && !sessionStorage.getItem("emad_hydrated_" + APP_ID)) {
+            sessionStorage.setItem("emad_hydrated_" + APP_ID, "1");
+            location.reload();
+          }
+        }
+      }).catch(function(){});
+  }
+
+  window.addEventListener("DOMContentLoaded", function() {
+    var pill = document.createElement("div");
+    pill.className = "no-print";
+    pill.style.cssText = "position:fixed;bottom:14px;right:14px;z-index:9998;background:rgba(15,76,129,0.92);color:#fff;padding:5px 12px;border-radius:999px;font-family:Tajawal,Segoe UI,sans-serif;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;";
+    pill.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;"></span><span>متّصل بالسحابة (' + APP_ID + ')</span>';
+    pill.title = "انقر لإخفاء الشارة";
+    pill.onclick = function(){ pill.style.display = "none"; };
+    document.body.appendChild(pill);
+  });
+})();
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منصّة التعلّم الذكي — نظام التقويم التفاعليّ المتدرّج</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: {
+              50: '#f6f7fb', 100: '#eceff6', 200: '#d8deeb', 300: '#b6c1d8',
+              400: '#8b9ab8', 500: '#647494', 600: '#495775', 700: '#35415b',
+              800: '#1e293b', 900: '#14213d',
+            },
+            brand: {
+              50: '#eef4ff', 100: '#dbe7fe', 200: '#bfd4fe', 300: '#93b7fd',
+              400: '#6091fa', 500: '#3b6df6', 600: '#254eeb', 700: '#1d3cd8',
+              800: '#1e32af', 900: '#1e2f8a',
+            },
+            gold: {
+              50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d',
+              400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309',
+              800: '#92400e',
+            },
+            teal: {
+              50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4',
+              400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e',
+              800: '#115e59',
+            },
+            rose: {
+              50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af',
+              400: '#fb7185', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c',
+              800: '#9f1239',
+            }
+          },
+          boxShadow: {
+            soft: '0 8px 30px rgba(20, 33, 61, 0.06)',
+            lift: '0 18px 45px rgba(20, 33, 61, 0.10)',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Tajawal', 'Noto Naskh Arabic', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #f6f7fb;
+      color: #14213d;
+    }
+    .font-display {
+      font-family: 'Tajawal', system-ui, sans-serif;
+    }
+    .font-reading-naskh {
+      font-family: 'Noto Naskh Arabic', 'Tajawal', serif;
+      line-height: 2.05;
+    }
+    .font-reading-tajawal {
+      font-family: 'Tajawal', system-ui, sans-serif;
+      line-height: 1.95;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.92); }
+      60% { transform: scale(1.03); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+    .animate-fade-up { animation: fadeInUp 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .animate-pop { animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .animate-floaty { animation: floaty 5s ease-in-out infinite; }
+    @media print {
+      body { background: #fff !important; }
+      .no-print { display: none !important; }
+      .print-cert-page {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        min-height: 100vh !important;
+      }
+      .print-exam-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .exam-q-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+  <style id="dynamic-print-style">@media print { @page { size: A4 landscape; margin: 0; } }</style>
+</head>
+<body class="min-h-screen">
+  <div id="app">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tajawal,sans-serif;color:#1e293b;direction:rtl;">
+      <div style="text-align:center;padding:24px;">
+        <p style="font-size:18px;font-weight:700;">جارٍ تشغيل منصّة التعلّم الذكي...</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.onerror = function(msg, url, line, col, err) {
+      var el = document.getElementById('app');
+      if (el) {
+        el.innerHTML = '<div style="max-width:600px;margin:40px auto;padding:24px;background:#fff1f2;border:2px solid #fecdd3;border-radius:16px;font-family:Tajawal,sans-serif;direction:rtl;color:#881337;">' +
+          '<h3 style="font-weight:800;font-size:18px;margin-bottom:8px;">حدث خطأ غير متوقع أثناء التشغيل</h3>' +
+          '<p style="font-size:13px;margin-bottom:12px;direction:ltr;text-align:left;">' + String(msg) + ' (Line: ' + line + ')</p>' +
+          '<button onclick="localStorage.clear();location.reload();" style="padding:10px 18px;background:#e11d48;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;">إعادة ضبط الذاكرة المؤقتة وإعادة التشغيل</button>' +
+          '</div>';
+      }
+    };
+  </script>
+
+  <script>
+    // ===================== 1. SVG ICONS =====================
+    const ICONS = {
+      settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+      sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+      user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+      grad: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+      door: '<path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/>',
+      arrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+      camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+      upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+      book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+      brain: '<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>',
+      trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+      info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+      x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+      check: '<polyline points="20 6 9 17 4 12"/>',
+      volOn: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+      volOff: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',
+      lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+      award: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+      medal: '<path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/>',
+      printer: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+      download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+      rotate: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+      home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+      lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+      key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+      save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
+      file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+      trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+      pencil: '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+      eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+      eyeOff: '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',
+      image: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+      users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+      qr: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+      cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+      plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      folder: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+      layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+      copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+      alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+      zoomIn: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>',
+      zoomOut: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>'
+    };
+
+    function svgIcon(name, size = 18, cls = '') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0 ${cls}">${ICONS[name] || ''}</svg>`;
+    }
+
+    // ===================== 2. WEB AUDIO SOUND EFFECTS =====================
+    let audioCtx = null;
+    let isAudioMuted = false;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playTone(freq, start, dur, type = 'sine', gainVal = 0.18) {
+      if (isAudioMuted) return;
+      const c = getAudioCtx();
+      if (!c) return;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, c.currentTime + start);
+      g.gain.setValueAtTime(0, c.currentTime + start);
+      g.gain.linearRampToValueAtTime(gainVal, c.currentTime + start + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur);
+      osc.connect(g);
+      g.connect(c.destination);
+      osc.start(c.currentTime + start);
+      osc.stop(c.currentTime + start + dur + 0.05);
+    }
+
+    const sfx = {
+      click: () => playTone(660, 0, 0.05, 'sine', 0.08),
+      correct: () => { playTone(587.33, 0, 0.16, 'sine'); playTone(880, 0.12, 0.22, 'sine'); },
+      wrong: () => { playTone(220, 0, 0.22, 'triangle', 0.16); playTone(174.61, 0.1, 0.26, 'triangle', 0.14); },
+      complete: () => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => playTone(f, i * 0.14, 0.3, 'sine', 0.2))
+    };
+
+    // ===================== 3. STORAGE & DATA MODELS =====================
+    const SETTINGS_KEY = 'edu.settings.v4';
+    const BANK_KEY = 'edu.quizBank.v1';
+    const ROSTER_KEY = 'edu.roster.v1';
+    const UNLISTED_KEY = 'edu.unlisted.v1';
+    const RESULTS_KEY = 'edu.results.v1';
+
+    const GEMINI_MODELS = [
+      { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash (الأحدث والأسرع)' },
+      { value: 'gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite (البديل الخفيف)' },
+      { value: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro (التحليل العميق الموصى به)' },
+      { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }
+    ];
+
+    const SUBJECT_OPTIONS = [
+      'اكتشاف تلقائي من المرفق',
+      'لغتي الجميلة',
+      'لغتي الخالدة',
+      'الدراسات الإسلامية',
+      'الرياضيات',
+      'العلوم',
+      'الدراسات الاجتماعية',
+      'اللغة الإنجليزية',
+      'المهارات الرقمية',
+      'مادّة أخرى (كتابة يدوية)'
+    ];
+
+    const defaultAcademicTree = [
+      {
+        id: 'stg-1',
+        name: 'المرحلة الابتدائية',
+        grades: [
+          { id: 'grd-4', name: 'الصف الرابع الابتدائي', sections: ['أ', 'ب'] },
+          { id: 'grd-5', name: 'الصف الخامس الابتدائي', sections: ['أ', 'ب'] },
+          { id: 'grd-6', name: 'الصف السادس الابتدائي', sections: ['أ', 'ب'] }
+        ]
+      },
+      {
+        id: 'stg-2',
+        name: 'المرحلة المتوسطة',
+        grades: [
+          { id: 'grd-7', name: 'الصف الأول المتوسط', sections: ['أ', 'ب'] },
+          { id: 'grd-8', name: 'الصف الثاني المتوسط', sections: ['أ', 'ب'] },
+          { id: 'grd-9', name: 'الصف الثالث المتوسط', sections: ['أ', 'ب'] }
+        ]
+      }
+    ];
+
+    const defaultSettings = {
+      welcomeBanner: 'أهلًا بك في منصّة التعلّم الذكيّ — اختر مرحلتك وصفّك وابدأ التحدّي',
+      institutionHeader: 'المملكة العربية السعودية — وزارة التعليم',
+      role1Title: 'معلّم المادّة',
+      role1Name: 'عماد سعيد محمّد',
+      role2Title: 'المشرف التربوي',
+      role2Name: 'أ. مهران أبو بكر',
+      role3Title: 'مدير المدرسة',
+      role3Name: 'أ. رائد الأسمريّ',
+      footerText: 'الحقوق محفوظة للأستاذ عماد سعيد محمّد 0507825450',
+      readingFont: 'naskh',
+      teacherLogo: null,
+      schoolLogo: null,
+      questionsPerLevel: 5,
+      directUploadMode: false,
+      geminiApiKey: '',
+      geminiModel: 'gemini-3-flash-preview',
+      firebaseUrl: 'https://emad-smart-planner-default-rtdb.firebaseio.com/apps/mnsh_altalm_aldhky',
+      panelPassword: '1234',
+      academicTree: JSON.parse(JSON.stringify(defaultAcademicTree))
+    };
+
+    const IS_STUDENT_EXPORT = Boolean(window.__STUDENT_ONLY_MODE__);
+
+    function loadSettings() {
+      if (window.__EMBEDDED_SETTINGS__) {
+        return { ...defaultSettings, ...window.__EMBEDDED_SETTINGS__ };
+      }
+      try {
+        const raw = localStorage.getItem(SETTINGS_KEY) || localStorage.getItem('edu.settings.v3');
+        if (!raw) return { ...defaultSettings, academicTree: JSON.parse(JSON.stringify(defaultAcademicTree)) };
+        const parsed = JSON.parse(raw);
+        const merged = { ...defaultSettings, ...parsed };
+        if (!Array.isArray(merged.academicTree) || merged.academicTree.length === 0) {
+          merged.academicTree = JSON.parse(JSON.stringify(defaultAcademicTree));
+        }
+        if (!GEMINI_MODELS.some(m => m.value === merged.geminiModel)) merged.geminiModel = defaultSettings.geminiModel;
+        return merged;
+      } catch {
+        return { ...defaultSettings, academicTree: JSON.parse(JSON.stringify(defaultAcademicTree)) };
+      }
+    }
+
+    function saveSettings(s) {
+      if (!IS_STUDENT_EXPORT) localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    }
+
+    function loadQuizBank() {
+      if (window.__EMBEDDED_QUIZ__) return [window.__EMBEDDED_QUIZ__];
+      try {
+        const raw = localStorage.getItem(BANK_KEY);
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) return arr;
+        }
+        const oldRaw = localStorage.getItem('edu.quiz.v2') || localStorage.getItem('edu.quiz.v1');
+        if (oldRaw) {
+          const oldQ = JSON.parse(oldRaw);
+          if (oldQ && Array.isArray(oldQ.questions)) {
+            const migrated = [{
+              id: oldQ.id || 'q-' + Date.now().toString(36),
+              isAvailable: true,
+              stage: defaultAcademicTree[0].name,
+              grade: defaultAcademicTree[0].grades[2].name,
+              ...oldQ
+            }];
+            localStorage.setItem(BANK_KEY, JSON.stringify(migrated));
+            return migrated;
+          }
+        }
+        return [];
+      } catch { return []; }
+    }
+
+    function saveQuizBank(bank) {
+      if (!IS_STUDENT_EXPORT) localStorage.setItem(BANK_KEY, JSON.stringify(bank));
+    }
+
+    function rosterKey(stage, grade, section) {
+      return `${(stage || '').trim()}||${(grade || '').trim()}||${(section || '').trim()}`;
+    }
+
+    function loadRoster() {
+      if (window.__EMBEDDED_ROSTER__) return window.__EMBEDDED_ROSTER__;
+      try {
+        const raw = localStorage.getItem(ROSTER_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+      } catch { return {}; }
+    }
+
+    function saveRoster(r) {
+      if (!IS_STUDENT_EXPORT) localStorage.setItem(ROSTER_KEY, JSON.stringify(r));
+    }
+
+    function loadUnlisted() {
+      try {
+        const raw = localStorage.getItem(UNLISTED_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch { return []; }
+    }
+
+    function saveUnlisted(list) {
+      localStorage.setItem(UNLISTED_KEY, JSON.stringify(list));
+    }
+
+    function loadResultsLog() {
+      try {
+        const raw = localStorage.getItem(RESULTS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch { return []; }
+    }
+
+    function appendResultLog(entry) {
+      const list = loadResultsLog();
+      if (!list.some(x => x.id === entry.id)) {
+        list.unshift(entry);
+        localStorage.setItem(RESULTS_KEY, JSON.stringify(list.slice(0, 1000)));
+      }
+    }
+
+    function clearResultsLog() {
+      localStorage.removeItem(RESULTS_KEY);
+    }
+
+    // ===================== 4. FIREBASE CLOUD SYNC ENGINE =====================
+    function normalizeFirebaseUrl(url) {
+      let u = String(url || '').trim();
+      if (!u) return '';
+      u = u.replace(/\.json(\?.*)?$/i, '').replace(/\/+$/, '');
+      if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+      return u;
+    }
+
+    async function fbRequest(baseUrl, path, method = 'GET', payload = null) {
+      const base = normalizeFirebaseUrl(baseUrl);
+      if (!base) return null;
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (payload !== null) opts.body = JSON.stringify(payload);
+      const res = await fetch(`${base}/${path}.json`, opts);
+      if (!res.ok) throw new Error(`Firebase HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    async function syncAllToFirebase() {
+      const base = normalizeFirebaseUrl(state.settings.firebaseUrl);
+      if (!base) return false;
+      try {
+        state.cloudSyncing = true;
+        const publicConfig = {
+          welcomeBanner: state.settings.welcomeBanner,
+          institutionHeader: state.settings.institutionHeader,
+          role1Title: state.settings.role1Title,
+          role1Name: state.settings.role1Name,
+          role2Title: state.settings.role2Title,
+          role2Name: state.settings.role2Name,
+          role3Title: state.settings.role3Title,
+          role3Name: state.settings.role3Name,
+          footerText: state.settings.footerText,
+          readingFont: state.settings.readingFont,
+          teacherLogo: state.settings.teacherLogo,
+          schoolLogo: state.settings.schoolLogo,
+          academicTree: state.settings.academicTree,
+          roster: state.roster,
+          updatedAt: Date.now()
+        };
+        const quizzesMap = {};
+        state.quizBank.forEach(q => { quizzesMap[q.id] = q; });
+
+        await Promise.all([
+          fbRequest(base, 'publicConfig', 'PUT', publicConfig),
+          fbRequest(base, 'quizzes', 'PUT', quizzesMap)
+        ]);
+        state.cloudConnected = true;
+        return true;
+      } catch (e) {
+        console.error('Firebase sync error:', e);
+        state.cloudConnected = false;
+        return false;
+      } finally {
+        state.cloudSyncing = false;
+      }
+    }
+
+    async function pullCloudDataForStudent(targetQuizId = null) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const fbFromParam = urlParams.get('fb');
+      if (fbFromParam && !state.settings.firebaseUrl) {
+        state.settings.firebaseUrl = fbFromParam;
+      }
+      const base = normalizeFirebaseUrl(state.settings.firebaseUrl);
+      if (!base) return;
+      try {
+        const [cfg, quizzesObj] = await Promise.all([
+          fbRequest(base, 'publicConfig', 'GET'),
+          targetQuizId ? fbRequest(base, `quizzes/${targetQuizId}`, 'GET') : fbRequest(base, 'quizzes', 'GET')
+        ]);
+        if (cfg && typeof cfg === 'object') {
+          state.settings = { ...state.settings, ...cfg };
+          if (cfg.roster && typeof cfg.roster === 'object') {
+            state.roster = cfg.roster;
+          }
+        }
+        if (targetQuizId && quizzesObj && quizzesObj.questions) {
+          state.quizBank = [quizzesObj];
+          state.selectedQuizId = quizzesObj.id;
+          if (quizzesObj.stage) state.student.stage = quizzesObj.stage;
+          if (quizzesObj.grade) state.student.grade = quizzesObj.grade;
+        } else if (!targetQuizId && quizzesObj && typeof quizzesObj === 'object') {
+          const arr = Object.values(quizzesObj).filter(q => q && Array.isArray(q.questions));
+          if (arr.length > 0) state.quizBank = arr;
+        }
+        state.cloudConnected = true;
+      } catch (e) {
+        console.warn('Cloud pull skipped:', e);
+      }
+    }
+
+    async function pullCloudResultsAndUnlisted() {
+      const base = normalizeFirebaseUrl(state.settings.firebaseUrl);
+      if (!base) return;
+      try {
+        const [resObj, unlObj] = await Promise.all([
+          fbRequest(base, 'results', 'GET'),
+          fbRequest(base, 'unlistedStudents', 'GET')
+        ]);
+        if (resObj && typeof resObj === 'object') {
+          const remoteResults = Object.values(resObj).filter(r => r && r.studentName);
+          const local = loadResultsLog();
+          const mergedMap = new Map();
+          [...remoteResults, ...local].forEach(item => mergedMap.set(String(item.id), item));
+          const sorted = Array.from(mergedMap.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(sorted.slice(0, 1000)));
+        }
+        if (unlObj && typeof unlObj === 'object') {
+          const remoteUnl = Object.entries(unlObj)
+            .map(([fbKey, val]) => ({ ...val, fbKey }))
+            .filter(u => u && u.typedName && !u.resolved);
+          const localUnl = loadUnlisted();
+          const map = new Map();
+          [...remoteUnl, ...localUnl].forEach(u => map.set(String(u.id), u));
+          state.unlistedStudents = Array.from(map.values()).filter(u => !u.resolved);
+          saveUnlisted(state.unlistedStudents);
+        }
+        state.cloudConnected = true;
+      } catch (e) {
+        console.warn('Cloud results pull error:', e);
+      }
+    }
+
+    // ===================== 5. APPLICATION STATE =====================
+    const initialSettings = loadSettings();
+    const initialTree = initialSettings.academicTree || defaultAcademicTree;
+    const initialStage = initialTree[0]?.name || '';
+    const initialGrade = initialTree[0]?.grades?.[0]?.name || '';
+    const initialSection = initialTree[0]?.grades?.[0]?.sections?.[0] || '';
+
+    const state = {
+      settings: initialSettings,
+      quizBank: loadQuizBank(),
+      roster: loadRoster(),
+      unlistedStudents: loadUnlisted(),
+      activeQuiz: null,
+      activeRunQuiz: null,
+      selectedQuizId: '',
+      phase: 'onboarding',
+      printExamMode: 'student',
+      printExamQuiz: null,
+      student: {
+        stage: initialStage,
+        grade: initialGrade,
+        section: initialSection,
+        selectedFromList: '',
+        typedName: ''
+      },
+      pendingDirectQuiz: null,
+      qIndex: 0,
+      selectedOption: null,
+      revealed: false,
+      answers: [],
+      result: null,
+      touched: false,
+      busy: false,
+      statusMsg: '',
+      errorMsg: '',
+      quizFontScale: 100,
+      refDrawerOpen: false,
+      refZoom: 100,
+      referenceAssets: [],
+      cloudConnected: Boolean(normalizeFirebaseUrl(initialSettings.firebaseUrl)),
+      cloudSyncing: false,
+      shareModalQuiz: null,
+      pdfChoiceQuiz: null,
+      panelOpen: false,
+      panelUnlocked: false,
+      pwdInput: '',
+      pwdError: false,
+      panelTab: 'content',
+      draftSettings: null,
+      showKey: false,
+      savedToast: false,
+      contentSubjectChoice: SUBJECT_OPTIONS[0],
+      contentCustomSubject: '',
+      contentStage: initialStage,
+      contentGrade: initialGrade,
+      uploadedFiles: [],
+      previewQuizId: '',
+      editingQId: null,
+      editQText: '',
+      editQCorrect: 0,
+      rosterStage: initialStage,
+      rosterGrade: initialGrade,
+      rosterSection: initialSection,
+      batchNamesText: '',
+      resolvingUnlistedId: null,
+      resolveEditName: '',
+      resolveStage: initialStage,
+      resolveGrade: initialGrade,
+      resolveSection: initialSection,
+      newStageName: ''
+    };
+
+    // ===================== 6. SMART SHUFFLING =====================
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function buildShuffledRunQuiz(baseQuiz) {
+      const shuffledQuestions = [];
+      [1, 2, 3].forEach(lvl => {
+        const lvlQs = shuffleArray(baseQuiz.questions.filter(q => q.level === lvl));
+        lvlQs.forEach(q => {
+          const isTF = q.type === 'tf' || q.options.length === 2;
+          if (isTF) {
+            shuffledQuestions.push({ ...q, options: [...q.options] });
+          } else {
+            const indexed = q.options.map((text, idx) => ({ text, isCorrect: idx === q.correctIndex }));
+            const mixed = shuffleArray(indexed);
+            const newCorrect = mixed.findIndex(item => item.isCorrect);
+            shuffledQuestions.push({
+              ...q,
+              options: mixed.map(item => item.text),
+              correctIndex: newCorrect >= 0 ? newCorrect : 0
+            });
+          }
+        });
+      });
+      return { ...baseQuiz, questions: shuffledQuestions };
+    }
+
+    // ===================== 7. FILE INGESTION & EXCEL PARSER =====================
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          const base64 = dataUrl.split(',')[1] || '';
+          resolve({ dataUrl, base64 });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function fileToText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsText(file, 'utf-8');
+      });
+    }
+
+    async function ingestFile(file) {
+      const name = file.name;
+      const mime = file.type || 'application/octet-stream';
+      const lower = name.toLowerCase();
+
+      if (mime.startsWith('image/')) {
+        const { dataUrl, base64 } = await fileToBase64(file);
+        return { name, mime, dataUrl, base64, kind: 'image' };
+      }
+      if (mime === 'application/pdf' || lower.endsWith('.pdf')) {
+        const { dataUrl, base64 } = await fileToBase64(file);
+        return { name, mime: 'application/pdf', dataUrl, base64, kind: 'pdf' };
+      }
+      if (lower.endsWith('.docx') || mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        if (!window.mammoth) throw new Error('مكتبة قراءة ملفات Word غير متوفرة حالياً.');
+        const arrayBuffer = await file.arrayBuffer();
+        const res = await window.mammoth.extractRawText({ arrayBuffer });
+        return { name, mime: 'text/plain', dataUrl: '', base64: '', text: res.value, kind: 'docx' };
+      }
+      const text = await fileToText(file);
+      return { name, mime: 'text/plain', dataUrl: '', base64: '', text, kind: 'text' };
+    }
+
+    async function parseExcelStudentNames(file) {
+      if (!window.XLSX) throw new Error('مكتبة قراءة ملفات Excel غير محمّلة (تحقق من الاتصال بالإنترنت).');
+      const data = await file.arrayBuffer();
+      const workbook = window.XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = window.XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+      const headerKeywords = ['الاسم', 'اسم الطالب', 'اسم الطالبة', 'الطلاب', 'name', 'student', 'م', 'الرقم'];
+      const names = [];
+      rows.forEach((row, rIdx) => {
+        if (!Array.isArray(row) || row.length === 0) return;
+        let candidate = '';
+        for (const cell of row) {
+          const val = String(cell ?? '').trim();
+          if (val && isNaN(Number(val)) && val.length >= 2) {
+            candidate = val;
+            break;
+          }
+        }
+        if (!candidate) return;
+        if (rIdx === 0 && headerKeywords.some(k => candidate.toLowerCase().includes(k))) return;
+        names.push(candidate);
+      });
+      return Array.from(new Set(names));
+    }
+
+    function downloadSampleExcelTemplate() {
+      if (!window.XLSX) return;
+      const wsData = [
+        ['اسم الطالب الثلاثي'],
+        ['أحمد محمّد علي العتيبي'],
+        ['سعد خالد عبدالله القحطاني'],
+        ['عمر فهد ناصر الشهري']
+      ];
+      const ws = window.XLSX.utils.aoa_to_sheet(wsData);
+      const wb = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb, ws, 'الطلاب');
+      window.XLSX.writeFile(wb, 'نموذج_أسماء_الطلاب.xlsx');
+    }
+
+    // ===================== 8. GEMINI API =====================
+    function buildUniversalPrompt(questionsPerLevel, chosenSubject, chosenStage, chosenGrade) {
+      const total = questionsPerLevel * 3;
+      const subjectHint = chosenSubject && chosenSubject !== SUBJECT_OPTIONS[0]
+        ? `المادة المحددة من المعلّم هي: «${chosenSubject}» (التزم بطبيعتها ومصطلحاتها).`
+        : 'اكتشف اسم المادة الدراسية بدقة من المحتوى المرفق.';
+      const gradeHint = chosenGrade ? `الفئة المستهدفة: ${chosenStage} — ${chosenGrade}.` : '';
+
+      return `أنت معلّم خبير ومصمّم اختبارات تحصيلية باللغة العربية لمختلف المواد الدراسية. مهمتك تحليل الملف أو الصورة المرفقة فقط، وبناء اختبار تفاعلي متدرج بأسلوب تربوي طبيعي.
+${subjectHint}
+${gradeHint}
+
+قواعد صارمة:
+1. ضع اسم المادة الدراسية في الحقل "subject"، واستخرج العنوان الدقيق للدرس أو المهارة من المحتوى وضعه في الحقل "lessonTitle".
+2. حدد لغة المحتوى في الحقل "language": اكتب "en" إذا كان المرفق درس لغة إنجليزية، واكتب "ar" لبقية المواد العربية.
+3. التزم بمعلومات المحتوى المرفق وحده في بناء الأسئلة والإجابات دون إضافة معلومات خارجية، وصُغ الأسئلة والتغذية الراجعة بأسلوب المعلّم المباشر والطبيعي.
+4. ممنوع منعًا باتًا استخدام العبارات الآلية أو الإشارة إلى الملف أو الورقة في نص السؤال أو التفسير التربوي، مثل: (بناءً على ورقة العمل، بناءً على الفقرة، استنادًا إلى النص المرفق، حسب الملف، ورد في الصورة، وفقًا للمحتوى). اشرح القاعدة أو المعلومة مباشرة كأنك تخاطب الطالب في الفصل.
+5. التزم قواعد الرسم الإملائي العربي في النصوص العربية: ضع التنوين بالفتح على الحرف الذي يسبق الألف الزائدة (مثال: كتابًا وليس كتاباً)، وضع الشدّة على الحروف المضعّفة دون إفراط في تشكيل كل حرف، ونسّق المعادلات والأرقام بوضوح تام في المواد العلمية.
+6. عدد الأسئلة ${total} موزّعة على 3 مستويات متدرّجة، ${questionsPerLevel} أسئلة لكل مستوى:
+   - المستوى 1 (السهل): التذكّر والفهم (تصنيف بلوم: التذكّر/الفهم | DOK 1 — الاستدعاء المباشر). نوّع فيه بين أسئلة اختيار من متعدد ("type": "mcq") وسؤال واحد أو اثنين صواب/خطأ ("type": "tf" بخيارين فقط: ["صواب", "خطأ"] أو ["True", "False"]).
+   - المستوى 2 (المتوسط): التطبيق والتحليل (تصنيف بلوم: التطبيق/التحليل | DOK 2 — المهارات والمفاهيم والربط).
+   - المستوى 3 (الأصعب): التقييم والابتكار وعمق المعرفة (تصنيف بلوم: التقييم/الابتكار | DOK 3 و 4 — التفكير الاستراتيجي وحل المشكلات والاستنتاج العميق).
+7. كل سؤال يحتوي: "level" (1 أو 2 أو 3)، "type" ("mcq" أو "tf")، "text"، "options"، "correctIndex"، "bloom"، "dok"، "explanation".
+
+أعد JSON فقط بالصيغة التالية دون أي نص إضافي:
+{
+  "subject": "اسم المادة الدراسية",
+  "language": "ar",
+  "lessonTitle": "عنوان الدرس أو المهارة المستخرجة",
+  "sourceSummary": "ملخّص موجز لمحتوى الدرس (سطران)",
+  "questions": [
+    {
+      "level": 1,
+      "type": "mcq",
+      "text": "نص السؤال",
+      "options": ["الخيار 1", "الخيار 2", "الخيار 3", "الخيار 4"],
+      "correctIndex": 0,
+      "bloom": "التذكّر",
+      "dok": "DOK 1",
+      "explanation": "شرح تربوي مباشر للقاعدة أو المعلومة"
+    }
+  ]
+}`;
+    }
+
+    function cleanNaturalArabic(str) {
+      let s = String(str ?? '').trim();
+      const roboticPrefixes = [
+        /^(?:بناءً|بناء)\s+على\s+(?:الفقرة\s+(?:الأولى|الثانية|الثالثة|الرابعة|السابقة|المذكورة)\s+)?(?:في\s+)?(?:ورقة\s+العمل|النص\s+المرفق|الملف\s+المرفق|المحتوى\s+المرفق|الصورة\s+المرفقة|الدرس\s+المرفق|القطعة|الفقرة)[،,:؛\-\s]*/i,
+        /^(?:استنادًا|استنادا|وفقًا|وفقا|طبقا|طبقًا|حسب|بحسب)\s+(?:إلى\s+|لـ\s*|ل)?(?:ورقة\s+العمل|النص\s+المرفق|الملف\s+المرفق|المحتوى\s+المرفق|الصورة\s+المرفقة|الفقرة\s+الأولى|الفقرة|النص)[،,:؛\-\s]*/i,
+        /^(?:كما\s+)?(?:ورد|جاء|ذكر|يظهر)\s+في\s+(?:ورقة\s+العمل|النص\s+المرفق|الملف\s+المرفق|المحتوى\s+المرفق|الصورة\s+المرفقة|الفقرة\s+الأولى|الفقرة)[،,:؛\-\s]*/i
+      ];
+      for (const rx of roboticPrefixes) s = s.replace(rx, '').trim();
+      if (s.length > 0) s = s.charAt(0).toUpperCase() + s.slice(1);
+      return s;
+    }
+
+    function sanitizeQuiz(raw, metaOverrides = {}) {
+      const subject = (metaOverrides.subject && metaOverrides.subject !== SUBJECT_OPTIONS[0])
+        ? metaOverrides.subject
+        : String(raw?.subject || 'مادّة دراسية').trim();
+      const language = raw?.language === 'en' ? 'en' : 'ar';
+      const lessonTitle = String(raw?.lessonTitle || 'درس غير معنون').trim();
+      const sourceSummary = raw?.sourceSummary ? String(raw.sourceSummary).trim() : '';
+      const qs = Array.isArray(raw?.questions) ? raw.questions : [];
+      const questions = qs.map((q, idx) => {
+        const level = Number(q?.level);
+        if (![1, 2, 3].includes(level)) return null;
+        const rawOpts = Array.isArray(q?.options) ? q.options.map(String).filter(s => s.trim() !== '') : [];
+        if (rawOpts.length < 2) return null;
+        const isTF = q?.type === 'tf' || rawOpts.length === 2;
+        const options = isTF ? rawOpts.slice(0, 2) : rawOpts.slice(0, 4);
+        if (!isTF) { while (options.length < 4) options.push('—'); }
+        const ci = Number.isInteger(Number(q?.correctIndex)) && Number(q.correctIndex) >= 0 && Number(q.correctIndex) < options.length
+          ? Number(q.correctIndex) : 0;
+        return {
+          id: `q-${idx}-${Date.now()}`,
+          level,
+          type: isTF ? 'tf' : 'mcq',
+          text: cleanNaturalArabic(q?.text),
+          options,
+          correctIndex: ci,
+          bloom: String(q?.bloom || '').trim(),
+          dok: String(q?.dok || '').trim(),
+          explanation: cleanNaturalArabic(q?.explanation)
+        };
+      }).filter(Boolean);
+
+      if (questions.length === 0) throw new Error('لم يتمكن النموذج من استخراج أسئلة كافية من المحتوى المرفق.');
+      return {
+        id: 'quiz-' + Date.now().toString(36),
+        isAvailable: true,
+        stage: metaOverrides.stage || '',
+        grade: metaOverrides.grade || '',
+        subject,
+        language,
+        lessonTitle,
+        sourceSummary,
+        questions,
+        createdAt: Date.now()
+      };
+    }
+
+    async function callSingleModel(model, cleanKey, body, metaOverrides) {
+      const cleanModel = model.replace(/^models\//, '');
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent`;
+
+      let response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
+        body: JSON.stringify(body)
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        response = await fetch(`${endpoint}?key=${encodeURIComponent(cleanKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      }
+
+      if (!response.ok) {
+        let serverDetail = '';
+        try {
+          const errJson = await response.json();
+          serverDetail = errJson?.error?.message || '';
+        } catch {}
+        const err = new Error(serverDetail || `HTTP ${response.status}`);
+        err.status = response.status;
+        throw err;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('لم يتم استلام محتوى نصي من النموذج.');
+
+      try {
+        return sanitizeQuiz(JSON.parse(text), metaOverrides);
+      } catch {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('تعذّر تحليل صيغة الاستجابة من النموذج.');
+        return sanitizeQuiz(JSON.parse(match[0]), metaOverrides);
+      }
+    }
+
+    async function discoverAvailableModels(cleanKey) {
+      try {
+        const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+          headers: { 'x-goog-api-key': cleanKey }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.models || [])
+          .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+          .map(m => m.name.replace(/^models\//, ''))
+          .filter(name => name.includes('gemini') && !name.includes('embedding') && !name.includes('tts') && !name.includes('image'));
+      } catch { return []; }
+    }
+
+    async function generateQuizFromFiles(files, apiKey, questionsPerLevel, primaryModel, metaOverrides, onStatus) {
+      const cleanKey = (apiKey || '').trim();
+      if (!cleanKey) throw new Error('يرجى إدخال مفتاح Gemini API أولاً من تبويب «الإعدادات والشجرة».');
+      if (!files || files.length === 0) throw new Error('يرجى رفع ملف أو صورة الدرس أولاً.');
+
+      const parts = [{ text: buildUniversalPrompt(questionsPerLevel, metaOverrides.subject, metaOverrides.stage, metaOverrides.grade) }];
+      for (const f of files) {
+        if (f.kind === 'image' || f.kind === 'pdf') {
+          parts.push({ inlineData: { mimeType: f.kind === 'pdf' ? 'application/pdf' : f.mime, data: f.base64 } });
+        } else if (f.text) {
+          parts.push({ text: `محتوى الملف (${f.name}):\n\n${f.text}` });
+        }
+      }
+
+      const body = {
+        contents: [{ role: 'user', parts }],
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+      };
+
+      const order = [primaryModel, ...GEMINI_MODELS.map(m => m.value).filter(m => m !== primaryModel)];
+      let lastErr = null;
+
+      for (let i = 0; i < order.length; i++) {
+        try {
+          return await callSingleModel(order[i], cleanKey, body, metaOverrides);
+        } catch (err) {
+          lastErr = err;
+          if (err.status === 400 || err.status === 401 || err.status === 403) {
+            throw new Error(`مشكلة في مصادقة المفتاح (رمز ${err.status}): ${err.message}`);
+          }
+          if (i < order.length - 1) {
+            onStatus?.('جارٍ التحويل تلقائيًّا إلى الخادم البديل...');
+            if (err.status === 429 || err.status === 503) await new Promise(r => setTimeout(r, 1200));
+          }
+        }
+      }
+
+      onStatus?.('جارٍ فحص النماذج المتاحة في حسابك تلقائيًّا...');
+      const discovered = await discoverAvailableModels(cleanKey);
+      const untried = discovered.filter(m => !order.includes(m));
+      for (const m of untried.slice(0, 3)) {
+        try { return await callSingleModel(m, cleanKey, body, metaOverrides); } catch (err) { lastErr = err; }
+      }
+
+      throw new Error(`تعذّر إكمال التوليد (${lastErr?.status ? 'رمز ' + lastErr.status : 'خطأ اتصال'}): ${lastErr?.message || 'حاول مرة أخرى بعد قليل.'}`);
+    }
+
+    // ===================== 9. CLEAN SHARE LINK & STANDALONE EXPORT =====================
+    function buildCleanQuizLink(quizObj) {
+      const url = new URL(window.location.href.split('?')[0]);
+      url.searchParams.set('quiz', quizObj.id);
+      const fb = normalizeFirebaseUrl(state.settings.firebaseUrl);
+      if (fb && window.location.protocol === 'file:') {
+        url.searchParams.set('fb', fb);
+      }
+      return url.toString();
+    }
+
+    function exportStandaloneStudentHTML(targetQuiz) {
+      if (!targetQuiz) return;
+      const safeQuiz = JSON.stringify(targetQuiz).replace(/<\/script>/gi, '<\\/script>');
+      const cleanSettings = {
+        ...state.settings,
+        geminiApiKey: '',
+        panelPassword: '',
+        directUploadMode: false
+      };
+      const safeSettings = JSON.stringify(cleanSettings).replace(/<\/script>/gi, '<\\/script>');
+      const safeRoster = JSON.stringify(state.roster).replace(/<\/script>/gi, '<\\/script>');
+
+      let html = document.documentElement.outerHTML;
+      html = html.replace(/<div id="app">[\s\S]*?<\/div>\s*<script>/, '<div id="app"></div>\n  <script>');
+      const injection = `<script>window.__STUDENT_ONLY_MODE__=true;window.__EMBEDDED_QUIZ__=${safeQuiz};window.__EMBEDDED_SETTINGS__=${safeSettings};window.__EMBEDDED_ROSTER__=${safeRoster};<\/script>\n</body>`;
+      html = html.replace(/<\/body>/i, injection);
+
+      const safeName = (targetQuiz.lessonTitle || 'الدرس').replace(/[\\/:*?"<>|]+/g, '_');
+      const blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `اختبار_الطلاب-${safeName}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportResultsCSV() {
+      const rows = loadResultsLog();
+      if (!rows.length) return;
+      const headers = ['التاريخ', 'اسم الطالب', 'المرحلة', 'الصف', 'الفصل', 'المادة', 'عنوان الدرس', 'المستوى الأول', 'المستوى الثاني', 'المستوى الثالث', 'الدرجة الكلية', 'النسبة المئوية'];
+      const lines = [headers.join(',')];
+      rows.forEach(r => {
+        const vals = [
+          `"${r.date || ''}"`, `"${r.studentName || ''}"`, `"${r.stage || ''}"`, `"${r.grade || ''}"`, `"${r.section || ''}"`,
+          `"${r.subject || ''}"`, `"${r.lessonTitle || ''}"`, `"${r.lvl1 || ''}"`, `"${r.lvl2 || ''}"`, `"${r.lvl3 || ''}"`,
+          `"${r.totalCorrect}/${r.totalQuestions}"`, `"${r.percentage}%"`
+        ];
+        lines.push(vals.join(','));
+      });
+      const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `سجل_نتائج_الطلاب_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ===================== 10. HELPERS =====================
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function getGradesForStage(tree, stageName) {
+      const st = (tree || []).find(s => s.name === stageName);
+      return st && Array.isArray(st.grades) ? st.grades : [];
+    }
+
+    function getSectionsForGrade(tree, stageName, gradeName) {
+      const grades = getGradesForStage(tree, stageName);
+      const gr = grades.find(g => g.name === gradeName);
+      return gr && Array.isArray(gr.sections) ? gr.sections : [];
+    }
+
+    function getAvailableQuizzesForStudent(stageName, gradeName) {
+      return state.quizBank.filter(q => {
+        if (q.isAvailable === false) return false;
+        if (stageName && q.stage && q.stage !== stageName) return false;
+        if (gradeName && q.grade && q.grade !== gradeName) return false;
+        return true;
+      });
+    }
+
+    function syncPrintOrientation() {
+      const styleEl = document.getElementById('dynamic-print-style');
+      if (!styleEl) return;
+      if (state.phase === 'printExam') {
+        styleEl.textContent = '@media print { @page { size: A4 portrait; margin: 12mm; } }';
+      } else {
+        styleEl.textContent = '@media print { @page { size: A4 landscape; margin: 0; } }';
+      }
+    }
+
+    // ===================== 11. RENDER ENGINE =====================
+    function render() {
+      try {
+      syncPrintOrientation();
+      const app = document.getElementById('app');
+      let html = '';
+
+      if (state.phase === 'onboarding') html = renderOnboarding();
+      else if (state.phase === 'quiz') html = renderQuiz();
+      else if (state.phase === 'certificate') html = renderCertificate();
+      else if (state.phase === 'printExam') html = renderOfficialPrintExam();
+
+      if (state.panelOpen && !IS_STUDENT_EXPORT) html += renderTeacherPanel();
+      if (state.shareModalQuiz) html += renderShareQRModal();
+      if (state.pdfChoiceQuiz) html += renderPdfChoiceModal();
+
+      app.innerHTML = html;
+
+      if (state.phase === 'certificate') renderCertificateQR();
+      if (state.shareModalQuiz) renderShareModalQR();
+      bindEvents();
+      } catch (renderErr) {
+        console.error('Render recovery:', renderErr);
+        const app = document.getElementById('app');
+        if (app) {
+          app.innerHTML = '<div style="max-width:520px;margin:60px auto;padding:24px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;text-align:center;font-family:Tajawal,sans-serif;direction:rtl;">' +
+            '<h3 style="font-weight:800;font-size:18px;color:#1e293b;margin-bottom:8px;">تعارض في البيانات المحفوظة من نسخة سابقة</h3>' +
+            '<p style="font-size:13px;color:#64748b;margin-bottom:16px;">' + esc(renderErr.message) + '</p>' +
+            '<button onclick="localStorage.removeItem(\'edu.quizBank.v1\');localStorage.removeItem(\'edu.settings.v4\');localStorage.removeItem(\'edu.roster.v1\');location.reload();" style="padding:10px 20px;background:#254eeb;color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;">تحديث البيانات وتشغيل المنصّة</button>' +
+            '</div>';
+        }
+      }
+    }
+
+    // --------------------- A. STUDENT ONBOARDING ---------------------
+    function renderOnboarding() {
+      const { settings, student, touched, busy, statusMsg, errorMsg, pendingDirectQuiz, cloudConnected } = state;
+      const tree = settings.academicTree || [];
+      const gradesList = getGradesForStage(tree, student.stage);
+      const sectionsList = getSectionsForGrade(tree, student.stage, student.grade);
+
+      const classStudents = state.roster[rosterKey(student.stage, student.grade, student.section)] || [];
+      const hasClassList = classStudents.length > 0;
+      const isUnlistedChosen = !hasClassList || student.selectedFromList === '__UNLISTED__';
+      const finalStudentName = isUnlistedChosen ? student.typedName.trim() : student.selectedFromList.trim();
+
+      const matchingQuizzes = getAvailableQuizzesForStudent(student.stage, student.grade);
+      if (matchingQuizzes.length > 0 && !matchingQuizzes.some(q => q.id === state.selectedQuizId)) {
+        state.selectedQuizId = matchingQuizzes[0].id;
+      } else if (matchingQuizzes.length === 0) {
+        state.selectedQuizId = '';
+      }
+      const chosenQuiz = matchingQuizzes.find(q => q.id === state.selectedQuizId) || null;
+      const directMode = settings.directUploadMode && !IS_STUDENT_EXPORT;
+
+      const valid = Boolean(student.stage && student.grade && student.section && finalStudentName);
+
+      return `
+      <div class="min-h-screen flex flex-col relative">
+        <div class="fixed inset-0 -z-10 overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-b from-brand-50 via-ink-50 to-teal-50"></div>
+          <div class="absolute -top-24 -right-24 w-72 h-72 bg-brand-200/30 rounded-full blur-3xl"></div>
+          <div class="absolute top-1/3 -left-24 w-80 h-80 bg-teal-200/30 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="relative flex-1 flex items-center justify-center p-4">
+          <div class="w-full max-w-2xl animate-fade-up">
+            <div class="text-center mb-5">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white shadow-soft mb-3 animate-floaty text-brand-600">
+                ${svgIcon('sparkles', 30)}
+              </div>
+              <h1 class="font-display text-3xl sm:text-4xl font-extrabold text-ink-800 mb-1.5">منصّة التعلّم الذكي</h1>
+              <p class="text-ink-500 text-sm sm:text-base">اختبار تفاعليّ متدرّج بثلاثة مستويات معرفية مبنيّ على درسك</p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-lift p-6 sm:p-8">
+              ${settings.welcomeBanner && settings.welcomeBanner.trim() ? `
+                <div class="mb-6 rounded-2xl border border-brand-100 bg-brand-50/70 px-4 py-3 text-center">
+                  <p class="text-sm sm:text-base font-bold leading-7 text-brand-800 break-words">${esc(settings.welcomeBanner)}</p>
+                </div>
+              ` : ''}
+
+              <!-- Cascading Academic Tree Selection -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div>
+                  <label class="block text-xs font-bold text-ink-700 mb-1.5">المرحلة الدراسية <span class="text-rose-500">*</span></label>
+                  <select id="sel-st-stage" class="w-full px-3 py-3 rounded-xl border border-ink-200 bg-white text-sm font-bold text-ink-800 outline-none focus:border-brand-500">
+                    ${tree.map(s => `<option value="${esc(s.name)}" ${student.stage === s.name ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-ink-700 mb-1.5">الصف الدراسي <span class="text-rose-500">*</span></label>
+                  <select id="sel-st-grade" class="w-full px-3 py-3 rounded-xl border border-ink-200 bg-white text-sm font-bold text-ink-800 outline-none focus:border-brand-500">
+                    ${gradesList.length === 0 ? `<option value="">لا توجد صفوف</option>` : gradesList.map(g => `<option value="${esc(g.name)}" ${student.grade === g.name ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-ink-700 mb-1.5">الفصل <span class="text-rose-500">*</span></label>
+                  <select id="sel-st-section" class="w-full px-3 py-3 rounded-xl border border-ink-200 bg-white text-sm font-bold text-ink-800 outline-none focus:border-brand-500">
+                    ${sectionsList.length === 0 ? `<option value="">لا توجد فصول</option>` : sectionsList.map(sec => `<option value="${esc(sec)}" ${student.section === sec ? 'selected' : ''}>${esc(sec)}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <!-- Student Name: Dropdown from Class Roster OR "غير موجود" -->
+              <div class="mb-5">
+                <label class="block text-sm font-bold text-ink-700 mb-1.5">اسم الطالب الثلاثي <span class="text-rose-500">*</span></label>
+                ${hasClassList ? `
+                  <div class="relative">
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400">${svgIcon('user', 18)}</span>
+                    <select id="sel-st-name-list"
+                      class="w-full px-4 py-3 pr-11 rounded-xl border bg-white outline-none transition text-base font-bold ${touched && !student.selectedFromList ? 'border-rose-400 ring-4 ring-rose-100' : 'border-ink-200 focus:border-brand-500'}">
+                      <option value="">— اختر اسمك من قائمة الفصل —</option>
+                      ${classStudents.map(nm => `<option value="${esc(nm)}" ${student.selectedFromList === nm ? 'selected' : ''}>${esc(nm)}</option>`).join('')}
+                      <option value="__UNLISTED__" ${student.selectedFromList === '__UNLISTED__' ? 'selected' : ''}>— اسمي غير موجود في القائمة —</option>
+                    </select>
+                  </div>
+                  ${student.selectedFromList === '__UNLISTED__' ? `
+                    <div class="mt-2.5 p-3 rounded-xl bg-gold-50 border border-gold-200 animate-fade-up">
+                      <label class="block text-xs font-bold text-gold-800 mb-1">اكتب اسمك الثلاثي كاملًا (سيُرسل للمعلّم لاعتماده في الفصل):</label>
+                      <input id="inp-st-typed-name" value="${esc(student.typedName)}" placeholder="مثال: محمد أحمد علي"
+                        class="w-full px-3.5 py-2.5 rounded-lg border border-gold-300 bg-white text-sm font-bold outline-none focus:border-brand-500" />
+                    </div>
+                  ` : ''}
+                ` : `
+                  <div class="relative">
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400">${svgIcon('user', 18)}</span>
+                    <input id="inp-st-typed-name" value="${esc(student.typedName)}" placeholder="اكتب اسمك الثلاثي (مثال: محمد أحمد علي)"
+                      class="w-full px-4 py-3 pr-11 rounded-xl border bg-white outline-none transition text-base ${touched && !student.typedName.trim() ? 'border-rose-400 ring-4 ring-rose-100' : 'border-ink-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100'}" />
+                  </div>
+                `}
+              </div>
+
+              <!-- Available Quizzes Filtered by Stage & Grade -->
+              ${!directMode ? (
+                matchingQuizzes.length > 0 ? `
+                  <div class="rounded-2xl bg-brand-50 border border-brand-100 p-4 mb-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-brand-700 mb-2">
+                      <div class="flex items-center gap-2">
+                        ${svgIcon('book', 18)}
+                        <span class="text-xs font-bold">الاختبارات المتاحة لصفّك (${matchingQuizzes.length})</span>
+                      </div>
+                      ${chosenQuiz?.subject ? `<span class="text-xs font-bold px-3 py-1 rounded-full bg-white text-brand-700 border border-brand-200">المادّة: ${esc(chosenQuiz.subject)}</span>` : ''}
+                    </div>
+
+                    ${matchingQuizzes.length > 1 ? `
+                      <select id="sel-available-quiz" class="w-full px-3.5 py-2.5 rounded-xl border border-brand-200 bg-white text-sm font-bold text-ink-800 mb-3 outline-none">
+                        ${matchingQuizzes.map(q => `<option value="${esc(q.id)}" ${q.id === state.selectedQuizId ? 'selected' : ''}>${esc(q.subject)} — ${esc(q.lessonTitle)} (${q.questions.length} سؤالًا)</option>`).join('')}
+                      </select>
+                    ` : `
+                      <h2 class="font-display text-xl sm:text-2xl font-bold text-ink-800 mb-3">${esc(chosenQuiz.lessonTitle)}</h2>
+                    `}
+
+                    <div class="grid grid-cols-3 gap-2">
+                      <div class="rounded-xl bg-white border border-ink-100 p-2.5 text-center">
+                        <div class="w-8 h-8 rounded-lg text-teal-600 bg-teal-50 grid place-items-center mx-auto mb-1">${svgIcon('brain', 16)}</div>
+                        <p class="text-xs font-bold text-ink-700">المستوى الأول</p>
+                        <p class="text-[11px] text-ink-400 mt-0.5 leading-tight">التذكّر والفهم</p>
+                      </div>
+                      <div class="rounded-xl bg-white border border-ink-100 p-2.5 text-center">
+                        <div class="w-8 h-8 rounded-lg text-gold-600 bg-gold-50 grid place-items-center mx-auto mb-1">${svgIcon('grad', 16)}</div>
+                        <p class="text-xs font-bold text-ink-700">المستوى الثاني</p>
+                        <p class="text-[11px] text-ink-400 mt-0.5 leading-tight">التطبيق والتحليل</p>
+                      </div>
+                      <div class="rounded-xl bg-white border border-ink-100 p-2.5 text-center">
+                        <div class="w-8 h-8 rounded-lg text-rose-600 bg-rose-50 grid place-items-center mx-auto mb-1">${svgIcon('trophy', 16)}</div>
+                        <p class="text-xs font-bold text-ink-700">المستوى الثالث</p>
+                        <p class="text-[11px] text-ink-400 mt-0.5 leading-tight">التقييم والابتكار</p>
+                      </div>
+                    </div>
+                    <p class="text-center text-xs font-medium text-ink-500 mt-2.5">عدد الأسئلة: ${chosenQuiz?.questions?.length || 0} سؤالًا</p>
+                  </div>
+                ` : `
+                  <div class="rounded-2xl bg-ink-50 border border-ink-200 p-4 mb-5 text-center">
+                    <p class="text-sm font-bold text-ink-600">لا توجد اختبارات متاحة حاليًّا لـ (${esc(student.grade)}).</p>
+                    <p class="text-xs text-ink-400 mt-1">تأكّد من اختيار مرحلتك وصفّك الصحيحين، أو انتظر إتاحة الاختبار من المعلّم.</p>
+                  </div>
+                `
+              ) : `
+                <div class="rounded-2xl bg-teal-50 border border-teal-100 p-4 mb-5">
+                  <div class="flex items-center gap-2 text-teal-700 mb-2">
+                    ${svgIcon('info', 18)}
+                    <span class="text-sm font-bold">وضع رفع الطالب المباشر</span>
+                  </div>
+                  <p class="text-sm text-ink-600 mb-3">ارفع صورة كتابك أو ملف الدرس في أيّ مادّة، وسيُولَّد اختبارك آليًّا.</p>
+                  <div class="flex flex-wrap gap-2 justify-center">
+                    <button id="btn-direct-file" ${busy ? 'disabled' : ''} class="px-4 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 flex items-center gap-2 disabled:opacity-60">
+                      ${svgIcon('upload', 16)} اختيار ملف
+                    </button>
+                    <button id="btn-direct-cam" ${busy ? 'disabled' : ''} class="px-4 py-2.5 rounded-xl bg-white border border-teal-200 text-teal-700 text-sm font-bold hover:bg-teal-50 flex items-center gap-2 disabled:opacity-60">
+                      ${svgIcon('camera', 16)} التقاط صورة
+                    </button>
+                    <input id="inp-direct-file" type="file" multiple accept=".pdf,.docx,.txt,image/*" class="hidden" />
+                    <input id="inp-direct-cam" type="file" accept="image/*" capture="environment" class="hidden" />
+                  </div>
+                  ${pendingDirectQuiz ? `<p class="mt-3 text-center text-xs font-bold text-teal-800 bg-white/80 rounded-lg py-2">تم تجهيز اختبار (${esc(pendingDirectQuiz.subject)}): «${esc(pendingDirectQuiz.lessonTitle)}»</p>` : ''}
+                  ${busy ? `<div class="flex items-center justify-center gap-2 mt-3 text-teal-700 text-sm"><span class="w-4 h-4 shrink-0 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin"></span> ${esc(statusMsg || 'جارٍ توليد اختبارك...')}</div>` : ''}
+                  ${errorMsg ? `<div class="mt-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">${esc(errorMsg)}</div>` : ''}
+                </div>
+              `}
+
+              ${touched && !valid ? `<p class="text-rose-500 text-xs font-bold mb-2">يرجى إكمال اختيار المرحلة والصفّ والفصل والاسم.</p>` : ''}
+
+              <button id="btn-start-quiz" ${busy || (!directMode && !chosenQuiz) ? 'disabled' : ''}
+                class="w-full py-3.5 rounded-xl bg-gradient-to-l from-brand-600 to-teal-600 text-white font-bold text-base flex items-center justify-center gap-2 hover:shadow-lift transition disabled:opacity-50">
+                ابدأ الاختبار ${svgIcon('arrowLeft', 18)}
+              </button>
+            </div>
+
+            <div class="flex items-center justify-center gap-2 mt-4 text-xs text-ink-400">
+              <span>${esc(settings.footerText)}</span>
+              ${cloudConnected ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 font-bold border border-teal-200">${svgIcon('cloud', 12)} متصل بالسحابة</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        ${!IS_STUDENT_EXPORT ? `
+          <button id="btn-open-panel" title="لوحة تحكّم المعلّم"
+            class="fixed bottom-5 left-5 z-30 w-11 h-11 rounded-full bg-white/90 backdrop-blur border border-ink-200 shadow-soft text-ink-500 hover:text-brand-600 hover:shadow-lift transition grid place-items-center">
+            ${svgIcon('settings', 19)}
+          </button>
+        ` : ''}
+      </div>`;
+    }
+
+    // --------------------- B. INTERACTIVE QUIZ VIEW ---------------------
+    function renderQuiz() {
+      const quiz = state.activeRunQuiz || state.activeQuiz;
+      const { qIndex, selectedOption, revealed, answers, refDrawerOpen, refZoom, referenceAssets, quizFontScale, settings } = state;
+      const questions = quiz.questions;
+      const q = questions[qIndex];
+      const isEn = quiz.language === 'en';
+      const hasRef = referenceAssets.length > 0 || Boolean(quiz.sourceSummary);
+      const readingCls = settings.readingFont === 'tajawal' ? 'font-reading-tajawal' : 'font-reading-naskh';
+
+      const levelMeta = {
+        1: { label: 'المستوى الأول', sub: 'السهل — التذكّر والفهم', badge: 'bg-teal-50 text-teal-700', cardActive: 'bg-teal-50 border-teal-200', text: 'text-teal-600', icon: 'brain' },
+        2: { label: 'المستوى الثاني', sub: 'المتوسط — التطبيق والتحليل', badge: 'bg-gold-50 text-gold-700', cardActive: 'bg-gold-50 border-gold-200', text: 'text-gold-600', icon: 'grad' },
+        3: { label: 'المستوى الثالث', sub: 'الأصعب — التقييم والابتكار', badge: 'bg-rose-50 text-rose-700', cardActive: 'bg-rose-50 border-rose-200', text: 'text-rose-600', icon: 'trophy' }
+      };
+      const meta = levelMeta[q.level];
+      const correctCount = answers.filter(a => a.correct).length;
+      const progress = (qIndex / questions.length) * 100;
+      const letters = isEn ? ['A', 'B', 'C', 'D'] : ['أ', 'ب', 'ج', 'د'];
+
+      const qFontSize = Math.round(22 * (quizFontScale / 100));
+      const optFontSize = Math.round(18 * (quizFontScale / 100));
+      const expFontSize = Math.round(16 * (quizFontScale / 100));
+
+      return `
+      <div class="min-h-screen flex flex-col bg-gradient-to-b from-ink-50 to-white">
+        <div class="sticky top-0 z-20 glass border-b border-ink-100">
+          <div class="max-w-3xl mx-auto px-4 py-3 flex items-center gap-2 sm:gap-3">
+            <button id="btn-quiz-exit" class="text-ink-500 hover:text-ink-800 p-1.5 rounded-lg hover:bg-ink-100" title="خروج">${svgIcon('x', 18)}</button>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-ink-400 truncate">${quiz.subject ? `${esc(quiz.subject)} • ` : ''}${esc(quiz.lessonTitle)}</p>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold ${meta.text}">${meta.label}</span>
+                <span class="text-xs text-ink-400 hidden sm:inline">•</span>
+                <span class="text-xs text-ink-500 truncate hidden sm:inline">${meta.sub}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1 bg-white border border-ink-200 rounded-xl px-1.5 py-1">
+              <button id="btn-qfont-down" class="px-1.5 py-0.5 rounded-lg text-xs font-bold text-ink-600 hover:bg-ink-100" title="تصغير الخط">أ-</button>
+              <button id="btn-qfont-up" class="px-1.5 py-0.5 rounded-lg text-xs font-bold text-brand-700 hover:bg-brand-50" title="تكبير الخط">أ+</button>
+            </div>
+
+            ${hasRef ? `
+              <button id="btn-open-ref" class="px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 border border-brand-200 text-xs font-bold hover:bg-brand-100 flex items-center gap-1.5">
+                ${svgIcon('book', 15)} <span class="hidden sm:inline">مرجع الدرس</span>
+              </button>
+            ` : ''}
+            <button id="btn-toggle-mute" class="p-2 rounded-lg hover:bg-ink-100 text-ink-500" title="الصوت">
+              ${svgIcon(isAudioMuted ? 'volOff' : 'volOn', 18)}
+            </button>
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-ink-100">
+              <span class="text-gold-500">${svgIcon('award', 15)}</span>
+              <span class="text-sm font-bold text-ink-800">${correctCount}</span>
+              <span class="text-xs text-ink-400">/ ${questions.length}</span>
+            </div>
+          </div>
+          <div class="h-1.5 bg-ink-100">
+            <div class="h-full bg-gradient-to-l from-brand-500 to-teal-500 transition-all duration-500" style="width: ${progress}%"></div>
+          </div>
+        </div>
+
+        <div class="max-w-3xl w-full mx-auto px-4 pt-4">
+          <div class="flex items-center gap-2">
+            ${[1, 2, 3].map(lvl => {
+              const m = levelMeta[lvl];
+              const lvlQs = questions.filter(qq => qq.level === lvl);
+              const lvlCorrect = answers.filter(a => a.correct && lvlQs.find(qq => qq.id === a.questionId)).length;
+              const done = lvlQs.length > 0 && lvlQs.every(qq => answers.find(a => a.questionId === qq.id));
+              const active = q.level === lvl;
+              return `
+                <div class="flex-1 rounded-xl p-2.5 border transition ${active ? m.cardActive : 'bg-white border-ink-100'}">
+                  <div class="flex items-center gap-1.5">
+                    <span class="${m.text}">${svgIcon(m.icon, 15)}</span>
+                    <span class="text-xs font-bold ${active ? m.text : 'text-ink-500'}">${m.label}</span>
+                  </div>
+                  <div class="flex items-center justify-between mt-1">
+                    <span class="text-[11px] text-ink-400">${done ? 'مكتمل' : active ? 'جارٍ' : 'منتظر'}</span>
+                    <span class="text-[11px] font-bold text-ink-600">${lvlCorrect}/${lvlQs.length}</span>
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="flex-1 flex items-start justify-center px-4 py-6">
+          <div class="w-full max-w-3xl">
+            <div class="bg-white rounded-3xl shadow-soft p-6 sm:p-8 animate-fade-up">
+              <div class="flex items-center justify-between mb-4">
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full ${meta.badge}">
+                  ${svgIcon(meta.icon, 15)} ${meta.label}
+                </span>
+                <span class="text-xs font-semibold text-ink-400">سؤال ${qIndex + 1} من ${questions.length}</span>
+              </div>
+
+              <div class="flex flex-wrap gap-1.5 mb-4">
+                ${q.bloom ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-ink-100 text-ink-600">مستوى بلوم: ${esc(q.bloom)}</span>` : ''}
+                ${q.dok ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-ink-100 text-ink-600">عمق المعرفة: ${esc(q.dok)}</span>` : ''}
+                ${q.type === 'tf' ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-700">صواب / خطأ</span>` : ''}
+              </div>
+
+              <div dir="${isEn ? 'ltr' : 'rtl'}" class="${isEn ? 'text-left' : 'text-right'}">
+                <h2 style="font-size: ${qFontSize}px;" class="${readingCls} font-bold text-ink-900 mb-6">${esc(q.text)}</h2>
+
+                <div class="${q.type === 'tf' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-3'}">
+                  ${q.options.map((opt, idx) => {
+                    const isCorrect = idx === q.correctIndex;
+                    const isSelected = idx === selectedOption;
+                    let cls = 'border-ink-200 bg-white hover:border-brand-300 hover:bg-brand-50/40 cursor-pointer';
+                    let badgeCls = 'bg-ink-100 text-ink-600';
+                    let badgeContent = letters[idx] || (idx + 1);
+                    if (revealed) {
+                      if (isCorrect) {
+                        cls = 'border-teal-400 bg-teal-50 text-teal-900 cursor-default';
+                        badgeCls = 'bg-teal-500 text-white';
+                        badgeContent = svgIcon('check', 16);
+                      } else if (isSelected) {
+                        cls = 'border-rose-400 bg-rose-50 text-rose-900 cursor-default';
+                        badgeCls = 'bg-rose-500 text-white';
+                        badgeContent = svgIcon('x', 16);
+                      } else {
+                        cls = 'border-ink-100 bg-white opacity-60 cursor-default';
+                      }
+                    }
+                    return `
+                      <button data-opt-idx="${idx}" ${revealed ? 'disabled' : ''}
+                        class="btn-quiz-opt w-full ${isEn ? 'text-left' : 'text-right'} px-4 py-4 rounded-2xl border-2 transition-all flex items-center gap-3.5 ${cls}">
+                        <span class="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-sm font-bold ${badgeCls}">${badgeContent}</span>
+                        <span style="font-size: ${optFontSize}px;" class="flex-1 ${readingCls} font-semibold">${esc(opt)}</span>
+                      </button>`;
+                  }).join('')}
+                </div>
+
+                ${revealed ? `
+                  <div class="mt-5 rounded-2xl bg-brand-50/70 border border-brand-100 p-4 animate-fade-up">
+                    <div class="flex items-center gap-2 text-brand-700 mb-1.5">
+                      ${svgIcon('lightbulb', 17)}
+                      <span class="text-xs font-bold">${isEn ? 'Pedagogical Explanation' : 'التفسير التربويّ'}</span>
+                    </div>
+                    <p style="font-size: ${expFontSize}px;" class="${readingCls} text-ink-800">${esc(q.explanation)}</p>
+                    <p dir="rtl" class="text-right text-sm font-bold mt-2.5 ${selectedOption === q.correctIndex ? 'text-teal-700' : 'text-rose-600'}">
+                      ${selectedOption === q.correctIndex ? 'إجابة صحيحة، أحسنت!' : `الإجابة الصحيحة: ${esc(q.options[q.correctIndex])}`}
+                    </p>
+                  </div>
+                ` : ''}
+              </div>
+
+              ${revealed ? `
+                <button id="btn-next-q"
+                  class="mt-5 w-full py-3.5 rounded-xl bg-ink-800 text-white font-bold text-base flex items-center justify-center gap-2 hover:bg-ink-900 transition animate-fade-up">
+                  ${qIndex + 1 >= questions.length ? 'إنهاء وعرض الشهادة' : 'السؤال التالي'} ${svgIcon('arrowLeft', 18)}
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+
+        ${refDrawerOpen ? `
+          <div class="fixed inset-0 z-50 flex">
+            <div id="ref-backdrop" class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"></div>
+            <div class="relative ms-auto h-full w-full max-w-xl bg-white shadow-lift flex flex-col animate-fade-up">
+              <div class="flex items-center justify-between px-5 py-3.5 border-b border-ink-100">
+                <div class="flex items-center gap-2 text-brand-700">
+                  ${svgIcon('book', 18)}
+                  <h3 class="font-display font-bold text-ink-800">مرجع الدرس المرفق</h3>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button id="btn-ref-zout" class="p-1.5 rounded-lg border border-ink-200 text-ink-600 hover:bg-ink-100">${svgIcon('zoomOut', 15)}</button>
+                  <span class="text-xs font-semibold text-ink-500 w-10 text-center">${refZoom}%</span>
+                  <button id="btn-ref-zin" class="p-1.5 rounded-lg border border-ink-200 text-ink-600 hover:bg-ink-100">${svgIcon('zoomIn', 15)}</button>
+                  <button id="btn-close-ref" class="p-1.5 rounded-lg hover:bg-ink-100 text-ink-500 mr-2">${svgIcon('x', 19)}</button>
+                </div>
+              </div>
+              <div class="flex-1 overflow-auto p-5 space-y-4 bg-ink-50">
+                ${quiz.sourceSummary ? `
+                  <div class="bg-white rounded-2xl border border-ink-100 p-4">
+                    <p class="text-xs font-bold text-brand-700 mb-1">ملخّص الدرس</p>
+                    <p class="${readingCls} text-base text-ink-800">${esc(quiz.sourceSummary)}</p>
+                  </div>
+                ` : ''}
+                ${referenceAssets.map(asset => `
+                  <div class="bg-white rounded-2xl border border-ink-100 p-3">
+                    <p class="text-xs font-semibold text-ink-500 mb-2">${esc(asset.name)}</p>
+                    ${asset.kind === 'image' && asset.dataUrl
+                      ? `<div class="overflow-auto"><img src="${asset.dataUrl}" style="width: ${refZoom}%;" class="rounded-xl mx-auto transition-all" /></div>`
+                      : asset.text
+                        ? `<pre style="font-size: ${Math.max(14, Math.round(16 * refZoom / 100))}px;" class="whitespace-pre-wrap ${readingCls} text-ink-900 bg-ink-50 p-4 rounded-xl">${esc(asset.text)}</pre>`
+                        : `<p class="text-xs text-ink-400">ملف PDF مرفق: ${esc(asset.name)}</p>`}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        ` : ''}
+      </div>`;
+    }
+
+    // --------------------- C. STUDENT CERTIFICATE ---------------------
+    function renderCertificate() {
+      const { result, settings } = state;
+      const isFull = result.percentage === 100;
+      const levelLabels = { 1: 'المستوى الأول', 2: 'المستوى الثاني', 3: 'المستوى الثالث' };
+      const dateStr = new Date(result.completedAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      const sigBlocks = [
+        { title: settings.role1Title, name: settings.role1Name },
+        { title: settings.role2Title, name: settings.role2Name },
+        { title: settings.role3Title, name: settings.role3Name }
+      ].filter(s => s.name && s.name.trim() !== '');
+
+      return `
+      <div class="min-h-screen bg-gradient-to-b from-ink-50 to-white flex flex-col">
+        <div class="no-print sticky top-0 z-20 glass border-b border-ink-100">
+          <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+            <button id="btn-cert-home" class="flex items-center gap-2 text-ink-600 hover:text-ink-900 text-sm font-bold p-2 rounded-lg hover:bg-ink-100">
+              ${svgIcon('home', 18)} الرئيسية
+            </button>
+            <div class="flex items-center gap-2">
+              <button id="btn-cert-print" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-ink-200 text-ink-700 text-sm font-bold hover:bg-ink-100">
+                ${svgIcon('printer', 16)} طباعة / PDF
+              </button>
+              <button id="btn-cert-png" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-bold hover:bg-brand-700">
+                ${svgIcon('download', 16)} تحميل صورة PNG
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center p-4 sm:p-8">
+          <div id="certificate-card" class="print-cert-page bg-white shadow-lift rounded-3xl relative overflow-hidden" style="width: 1123px; min-height: 794px; max-width: 100%;">
+            <div class="absolute inset-0 pointer-events-none">
+              <div class="absolute inset-3 rounded-2xl border-2 border-gold-200"></div>
+              <div class="absolute inset-5 rounded-xl border border-gold-300/50"></div>
+              <div class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-gold-100 to-transparent rounded-bl-full"></div>
+              <div class="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-brand-50 to-transparent rounded-tr-full"></div>
+            </div>
+
+            <div class="relative p-10 sm:p-14 flex flex-col h-full" style="min-height: 794px;">
+              <div class="flex items-center justify-between mb-5">
+                <div>
+                  ${settings.schoolLogo
+                    ? `<img src="${settings.schoolLogo}" alt="شعار" class="w-20 h-20 object-contain" />`
+                    : `<div class="w-20 h-20 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center">${svgIcon('book', 36)}</div>`}
+                </div>
+                <div class="text-center flex-1 px-4">
+                  ${settings.institutionHeader ? `<p class="text-xs font-bold text-ink-500 mb-1">${esc(settings.institutionHeader)}</p>` : ''}
+                  <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-ink-800">شهادة تقدير وإجازة</h1>
+                  <p class="text-sm text-ink-500 mt-1">منصّة التعلّم الذكي — اختبار تفاعليّ متدرّج</p>
+                </div>
+                <div>
+                  ${settings.teacherLogo
+                    ? `<img src="${settings.teacherLogo}" alt="شعار" class="w-20 h-20 object-contain" />`
+                    : `<div class="w-20 h-20 rounded-2xl bg-teal-50 text-teal-600 grid place-items-center">${svgIcon('award', 36)}</div>`}
+                </div>
+              </div>
+
+              <div class="h-px bg-gradient-to-l from-transparent via-gold-300 to-transparent mb-5"></div>
+
+              <div class="flex-1 flex flex-col items-center text-center">
+                <div class="mb-4 animate-pop">
+                  ${isFull ? `
+                    <div class="relative">
+                      <div class="absolute inset-0 blur-2xl bg-gold-300/40 rounded-full"></div>
+                      <div class="relative w-20 h-20 rounded-full bg-gradient-to-br from-gold-300 to-gold-500 grid place-items-center shadow-lift text-white">
+                        ${svgIcon('medal', 40)}
+                      </div>
+                    </div>
+                  ` : `
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-brand-400 to-teal-500 grid place-items-center shadow-soft text-white">
+                      ${svgIcon('check', 40)}
+                    </div>
+                  `}
+                </div>
+
+                <p class="text-ink-500 text-sm mb-1">تشهد منصّة التعلّم بأنّ الطالب/ة</p>
+                <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-ink-800 mb-2">${esc(result.student.name)}</h2>
+                <p class="text-ink-600 text-sm mb-4">
+                  من <span class="font-bold">${esc(result.student.grade)}</span> — الفصل <span class="font-bold">${esc(result.student.section)}</span>
+                </p>
+
+                <p class="text-ink-600 text-sm mb-1">قد أتمّ بنجاح اختبار درس ${result.quiz.subject ? `في مادّة <span class="font-bold text-ink-800">${esc(result.quiz.subject)}</span>` : ''}</p>
+                <h3 class="font-display text-xl font-bold text-brand-700 mb-4">${esc(result.quiz.lessonTitle)}</h3>
+
+                <div class="flex items-center gap-6 mb-4">
+                  <div class="text-center">
+                    <p class="text-xs text-ink-400 mb-1">الدرجة</p>
+                    <p class="font-display text-3xl font-extrabold text-ink-800">
+                      ${result.totalCorrect} <span class="text-ink-300 text-xl">/ ${result.totalQuestions}</span>
+                    </p>
+                  </div>
+                  <div class="w-px h-12 bg-ink-200"></div>
+                  <div class="text-center">
+                    <p class="text-xs text-ink-400 mb-1">النسبة المئوية</p>
+                    <p class="font-display text-3xl font-extrabold ${isFull ? 'text-gold-600' : 'text-brand-600'}">${result.percentage}%</p>
+                  </div>
+                </div>
+
+                <div class="flex items-stretch gap-3 mb-5 w-full max-w-xl">
+                  ${result.levelResults.map(lr => `
+                    <div class="flex-1 rounded-2xl bg-ink-50 border border-ink-100 py-2.5 px-2">
+                      <p class="text-xs text-ink-500 mb-1">${levelLabels[lr.level]}</p>
+                      <p class="font-display text-lg font-bold text-ink-800">${lr.correct}<span class="text-ink-300 text-sm">/${lr.total}</span></p>
+                      <div class="h-1 bg-ink-200 rounded-full mt-2 overflow-hidden">
+                        <div class="h-full rounded-full ${lr.correct === lr.total ? 'bg-teal-500' : 'bg-brand-500'}"
+                          style="width: ${lr.total ? (lr.correct / lr.total) * 100 : 0}%"></div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+
+                <div class="max-w-2xl rounded-2xl p-4 mb-4 ${isFull ? 'bg-gold-50 border border-gold-200' : 'bg-brand-50 border border-brand-100'}">
+                  <p class="font-reading-naskh text-base leading-relaxed font-semibold ${isFull ? 'text-gold-800' : 'text-brand-800'}">
+                    ${isFull
+                      ? 'تهنئة قلبية لحصولك على الدرجة الكاملة وإتقانك لجميع مهارات الفهم وعمق المعرفة، راجين لك دوام التميّز والحرص الدائم على البقاء في القمّة.'
+                      : 'أحسنت المحاولة، وقد حققت خطوة طيبة في فهم الدرس، وندعوك لمراجعة الملاحظات وإعادة التحدّي بعزيمة أكبر للوصول إلى الدرجة الكاملة والتربّع على القمّة، راجين لك التوفيق والسداد.'}
+                  </p>
+                </div>
+
+                ${!isFull ? `
+                  <button id="btn-cert-retake"
+                    class="no-print inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-sm hover:bg-rose-700 transition mb-3">
+                    ${svgIcon('rotate', 16)} إعادة التحدي لتحقيق الدرجة الكاملة
+                  </button>
+                ` : ''}
+              </div>
+
+              <div class="mt-auto pt-5 border-t border-ink-100 flex items-end justify-between gap-4">
+                <div class="flex-1 flex items-start justify-around gap-4 text-center">
+                  ${sigBlocks.map(sb => `
+                    <div class="flex-1">
+                      <div class="mx-auto w-28 h-8 border-b border-ink-200 mb-1"></div>
+                      <p class="text-xs text-ink-400">${esc(sb.title || 'التوقيع')}</p>
+                      <p class="text-sm font-bold text-ink-800">${esc(sb.name)}</p>
+                    </div>
+                  `).join('')}
+                </div>
+
+                <div class="shrink-0 flex flex-col items-center">
+                  <div id="cert-qr-box" class="w-16 h-16 p-1 bg-white border border-ink-200 rounded-xl grid place-items-center"></div>
+                  <span class="text-[9px] text-ink-400 mt-1">رمز التحقق</span>
+                </div>
+              </div>
+              <p class="text-center text-[10px] text-ink-400 mt-3">تاريخ الإصدار: ${dateStr}</p>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function renderCertificateQR() {
+      const box = document.getElementById('cert-qr-box');
+      if (!box || !state.result) return;
+      const r = state.result;
+      const payload = `الطالب: ${r.student.name} | الصف: ${r.student.grade}-${r.student.section} | المادة: ${r.quiz.subject || ''} | الدرس: ${r.quiz.lessonTitle} | الدرجة: ${r.totalCorrect}/${r.totalQuestions} (${r.percentage}%)`;
+      box.innerHTML = '';
+      if (window.QRCode) {
+        try {
+          new window.QRCode(box, { text: payload, width: 56, height: 56, colorDark: '#14213d', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.L });
+          return;
+        } catch {}
+      }
+      box.innerHTML = `<span class="text-[9px] font-bold text-ink-600 text-center">VER-${String(r.completedAt).slice(-6)}</span>`;
+    }
+
+    // --------------------- D. OFFICIAL A4 PRINT EXAM / ANSWER KEY VIEW ---------------------
+    function renderOfficialPrintExam() {
+      const qz = state.printExamQuiz;
+      const isTeacherKey = state.printExamMode === 'teacher';
+      const settings = state.settings;
+      if (!qz) return '';
+
+      const isEn = qz.language === 'en';
+      const letters = isEn ? ['A', 'B', 'C', 'D'] : ['أ', 'ب', 'ج', 'د'];
+      const sigBlocks = [
+        { title: settings.role1Title, name: settings.role1Name },
+        { title: settings.role2Title, name: settings.role2Name },
+        { title: settings.role3Title, name: settings.role3Name }
+      ].filter(s => s.name && s.name.trim() !== '');
+
+      const levels = [
+        { id: 1, title: 'المستوى الأول: التذكّر والفهم (الاستدعاء المباشر)' },
+        { id: 2, title: 'المستوى الثاني: التطبيق والتحليل (المهارات والمفاهيم)' },
+        { id: 3, title: 'المستوى الثالث: التقييم والابتكار (عمق المعرفة)' }
+      ];
+
+      return `
+      <div class="min-h-screen bg-ink-100 pb-10">
+        <div class="no-print sticky top-0 z-30 glass border-b border-ink-200 px-4 py-3">
+          <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <button id="btn-exit-print-exam" class="px-4 py-2 rounded-xl bg-white border border-ink-200 text-ink-700 text-sm font-bold hover:bg-ink-50 flex items-center gap-2">
+              ${svgIcon('arrowLeft', 16)} العودة للمنصّة
+            </button>
+            <div class="flex items-center gap-2">
+              <button id="btn-switch-print-student" class="px-3.5 py-2 rounded-xl text-xs font-bold border ${!isTeacherKey ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-ink-700 border-ink-200'}">
+                نسخة اختبار الطالب
+              </button>
+              <button id="btn-switch-print-teacher" class="px-3.5 py-2 rounded-xl text-xs font-bold border ${isTeacherKey ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-ink-700 border-ink-200'}">
+                نموذج الإجابة والتفسير التربوي
+              </button>
+              <button id="btn-trigger-print-exam" class="px-5 py-2 rounded-xl bg-ink-800 text-white text-sm font-bold hover:bg-ink-900 flex items-center gap-2">
+                ${svgIcon('printer', 16)} طباعة / حفظ PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="print-exam-sheet max-w-4xl mx-auto mt-6 bg-white shadow-lift rounded-2xl border border-ink-200 p-8 sm:p-10">
+          <div class="flex items-center justify-between border-b-2 border-ink-800 pb-4 mb-5">
+            <div class="w-24 flex justify-start">
+              ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="w-20 h-20 object-contain" />` : `<div class="w-16 h-16 rounded-xl border border-ink-200 grid place-items-center text-ink-400">${svgIcon('book', 28)}</div>`}
+            </div>
+            <div class="text-center flex-1 px-3">
+              ${settings.institutionHeader ? `<p class="text-xs font-bold text-ink-600 mb-1">${esc(settings.institutionHeader)}</p>` : ''}
+              <h1 class="font-display text-xl sm:text-2xl font-extrabold text-ink-900">
+                ${isTeacherKey ? 'نموذج الإجابة والتفسير التربوي المعتمد' : 'اختبار تقويميّ متدرّج في مهارات الدرس'}
+              </h1>
+              <p class="text-sm font-bold text-brand-700 mt-1">
+                المادّة: ${esc(qz.subject || '—')} &nbsp;|&nbsp; الدرس: ${esc(qz.lessonTitle)}
+              </p>
+              ${qz.stage || qz.grade ? `<p class="text-xs text-ink-500 mt-0.5">${esc(qz.stage)} — ${esc(qz.grade)}</p>` : ''}
+            </div>
+            <div class="w-24 flex justify-end">
+              ${settings.teacherLogo ? `<img src="${settings.teacherLogo}" class="w-20 h-20 object-contain" />` : `<div class="w-16 h-16 rounded-xl border border-ink-200 grid place-items-center text-ink-400">${svgIcon('award', 28)}</div>`}
+            </div>
+          </div>
+
+          ${!isTeacherKey ? `
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border border-ink-300 rounded-xl p-3.5 mb-6 text-sm bg-ink-50/40">
+              <div><span class="font-bold text-ink-700">اسم الطالب:</span> ........................................</div>
+              <div><span class="font-bold text-ink-700">الصفّ / الفصل:</span> ................ / ........</div>
+              <div><span class="font-bold text-ink-700">الدرجة المستحقّة:</span> ........ / ${qz.questions.length}</div>
+            </div>
+          ` : `
+            <div class="mb-6 rounded-xl bg-teal-50 border border-teal-200 px-4 py-2.5 flex items-center justify-between text-xs font-bold text-teal-800">
+              <span>نسخة المعلّم وملفّ الإنجاز — تتضمّن الإجابات الصحيحة والتفسير التربويّ ومستويات بلوم وعمق المعرفة</span>
+              <span>إجمالي الأسئلة: ${qz.questions.length}</span>
+            </div>
+          `}
+
+          <div class="space-y-6">
+            ${levels.map(lvl => {
+              const lvlQs = qz.questions.filter(q => q.level === lvl.id);
+              if (lvlQs.length === 0) return '';
+              return `
+                <div>
+                  <div class="bg-ink-800 text-white px-4 py-2 rounded-lg font-display font-bold text-sm mb-3 flex items-center justify-between">
+                    <span>${lvl.title}</span>
+                    <span class="text-xs font-normal text-ink-200">(${lvlQs.length} أسئلة)</span>
+                  </div>
+                  <div class="space-y-4">
+                    ${lvlQs.map((q, idx) => `
+                      <div class="exam-q-card border border-ink-200 rounded-xl p-4" dir="${isEn ? 'ltr' : 'rtl'}">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                          <p class="font-reading-naskh text-base font-bold text-ink-900">
+                            <span class="inline-block ml-1.5 text-brand-700">${idx + 1}.</span> ${esc(q.text)}
+                          </p>
+                          <span class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded bg-ink-100 text-ink-600">
+                            ${esc(q.bloom)} | ${esc(q.dok)}
+                          </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                          ${q.options.map((opt, oi) => {
+                            const isAns = isTeacherKey && oi === q.correctIndex;
+                            return `
+                              <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-reading-naskh ${isAns ? 'border-teal-500 bg-teal-50 text-teal-900 font-bold' : 'border-ink-100 text-ink-800'}">
+                                <span class="w-5 h-5 rounded-full border ${isAns ? 'border-teal-600 bg-teal-600 text-white' : 'border-ink-400 text-ink-600'} grid place-items-center text-[11px] font-bold shrink-0">
+                                  ${isAns ? '✓' : (letters[oi] || oi + 1)}
+                                </span>
+                                <span>${esc(opt)}</span>
+                              </div>
+                            `;
+                          }).join('')}
+                        </div>
+
+                        ${isTeacherKey && q.explanation ? `
+                          <div class="mt-2.5 pt-2 border-t border-dashed border-ink-200 text-xs font-reading-naskh text-ink-700">
+                            <span class="font-bold text-teal-700">التفسير التربويّ:</span> ${esc(q.explanation)}
+                          </div>
+                        ` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="mt-8 pt-4 border-t-2 border-ink-200 flex items-start justify-around gap-4 text-center">
+            ${sigBlocks.map(sb => `
+              <div class="flex-1">
+                <p class="text-xs text-ink-500 mb-1">${esc(sb.title)}</p>
+                <p class="text-sm font-bold text-ink-900">${esc(sb.name)}</p>
+                <div class="mx-auto w-28 h-6 border-b border-dotted border-ink-400 mt-2"></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // --------------------- E. SHARE LINK & QR MODAL ---------------------
+    function renderShareQRModal() {
+      const qz = state.shareModalQuiz;
+      const link = buildCleanQuizLink(qz);
+      return `
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div id="share-modal-backdrop" class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-md bg-white rounded-3xl shadow-lift p-6 animate-pop text-center">
+          <button id="btn-close-share-modal" class="absolute top-4 left-4 p-2 rounded-lg text-ink-400 hover:bg-ink-100">${svgIcon('x', 18)}</button>
+
+          <div id="qr-export-card" class="bg-white p-5 rounded-2xl border-2 border-brand-100 mb-4">
+            <span class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-brand-50 text-brand-700 mb-2">${esc(qz.subject || 'اختبار تفاعلي')}</span>
+            <h3 class="font-display text-xl font-extrabold text-ink-900 mb-1">${esc(qz.lessonTitle)}</h3>
+            <p class="text-xs text-ink-500 mb-4">${esc(qz.stage)} ${qz.grade ? `— ${esc(qz.grade)}` : ''}</p>
+            <div id="share-qr-canvas" class="w-44 h-44 mx-auto p-2 bg-white border border-ink-200 rounded-2xl grid place-items-center"></div>
+            <p class="text-[11px] font-bold text-ink-600 mt-3">امسح الرمز بكاميرا الجوّال لبدء الاختبار مباشرة</p>
+          </div>
+
+          <div class="flex items-center gap-2 bg-ink-50 border border-ink-200 rounded-xl p-2 mb-3">
+            <input id="inp-share-url" readonly value="${esc(link)}" dir="ltr" class="flex-1 bg-transparent text-xs text-ink-700 outline-none px-2" />
+            <button id="btn-copy-share-url" class="px-3 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 flex items-center gap-1">
+              ${svgIcon('copy', 13)} نسخ الرابط
+            </button>
+          </div>
+
+          <button id="btn-download-qr-card" class="w-full py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 flex items-center justify-center gap-2">
+            ${svgIcon('download', 16)} تحميل بطاقة الباركود باسم الدرس (PNG)
+          </button>
+        </div>
+      </div>`;
+    }
+
+    function renderShareModalQR() {
+      const box = document.getElementById('share-qr-canvas');
+      if (!box || !state.shareModalQuiz) return;
+      const link = buildCleanQuizLink(state.shareModalQuiz);
+      box.innerHTML = '';
+      if (window.QRCode) {
+        new window.QRCode(box, { text: link, width: 156, height: 156, colorDark: '#14213d', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.M });
+      }
+    }
+
+    // --------------------- F. PDF CHOICE MODAL ---------------------
+    function renderPdfChoiceModal() {
+      const qz = state.pdfChoiceQuiz;
+      return `
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div id="pdf-modal-backdrop" class="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-md bg-white rounded-3xl shadow-lift p-6 animate-pop">
+          <button id="btn-close-pdf-modal" class="absolute top-4 left-4 p-2 rounded-lg text-ink-400 hover:bg-ink-100">${svgIcon('x', 18)}</button>
+          <div class="text-center mb-5">
+            <div class="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center mx-auto mb-2">${svgIcon('printer', 24)}</div>
+            <h3 class="font-display text-lg font-extrabold text-ink-900">تصدير PDF رسميّ ومعتمد</h3>
+            <p class="text-xs text-ink-500 mt-1">اختر النسخة المطلوبة لدرس «${esc(qz.lessonTitle)}»</p>
+          </div>
+          <div class="space-y-3">
+            <button id="btn-open-pdf-student" class="w-full p-4 rounded-2xl border-2 border-brand-200 bg-brand-50/40 hover:bg-brand-50 text-right transition flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-brand-600 text-white grid place-items-center shrink-0">${svgIcon('file', 20)}</div>
+              <div>
+                <p class="text-sm font-extrabold text-ink-900">1. نسخة اختبار الطالب</p>
+                <p class="text-xs text-ink-500 mt-0.5">ورقة اختبار رسمية بالشعارات والتوقيعات وخالية من الإجابات.</p>
+              </div>
+            </button>
+            <button id="btn-open-pdf-teacher" class="w-full p-4 rounded-2xl border-2 border-teal-200 bg-teal-50/40 hover:bg-teal-50 text-right transition flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-teal-600 text-white grid place-items-center shrink-0">${svgIcon('check', 20)}</div>
+              <div>
+                <p class="text-sm font-extrabold text-ink-900">2. نموذج الإجابة والتفسير التربويّ</p>
+                <p class="text-xs text-ink-500 mt-0.5">مظلّلة فيه الإجابات الصحيحة مع التفسير التربويّ لملفّ الإنجاز.</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // --------------------- G. TEACHER CONTROL PANEL ---------------------
+    function renderTeacherPanel() {
+      const {
+        panelUnlocked, pwdInput, pwdError, panelTab, draftSettings, showKey, savedToast,
+        uploadedFiles, busy, statusMsg, errorMsg, quizBank, previewQuizId,
+        editingQId, editQText, editQCorrect, contentSubjectChoice, contentCustomSubject,
+        contentStage, contentGrade, rosterStage, rosterGrade, rosterSection,
+        batchNamesText, resolvingUnlistedId, resolveEditName, resolveStage, resolveGrade, resolveSection,
+        cloudConnected, cloudSyncing
+      } = state;
+
+      const d = draftSettings || state.settings;
+      const tree = d.academicTree || [];
+      const levelNames = { 1: 'المستوى الأول', 2: 'المستوى الثاني', 3: 'المستوى الثالث' };
+      const levelColors = { 1: 'bg-teal-50 text-teal-700', 2: 'bg-gold-50 text-gold-700', 3: 'bg-rose-50 text-rose-700' };
+
+      const contentGrades = getGradesForStage(tree, contentStage);
+      const activePreviewQuiz = quizBank.find(q => q.id === previewQuizId) || quizBank[0] || null;
+      const resultsLog = panelTab === 'results' ? loadResultsLog() : [];
+
+      const rosterGrades = getGradesForStage(tree, rosterStage);
+      const rosterSections = getSectionsForGrade(tree, rosterStage, rosterGrade);
+      const currentClassStudents = state.roster[rosterKey(rosterStage, rosterGrade, rosterSection)] || [];
+      const unlistedList = state.unlistedStudents.filter(u => !u.resolved);
+
+      return `
+      <div class="fixed inset-0 z-40 flex">
+        <div id="panel-backdrop" class="absolute inset-0 bg-ink-900/40 backdrop-blur-sm"></div>
+        <div class="relative ms-auto h-full w-full max-w-3xl bg-ink-50 shadow-lift flex flex-col animate-fade-up">
+          <div class="flex items-center justify-between px-5 py-3.5 bg-white border-b border-ink-100">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-brand-600 text-white grid place-items-center">${svgIcon('settings', 18)}</div>
+              <div>
+                <h2 class="font-display font-bold text-ink-800 leading-tight">لوحة تحكّم المعلّم</h2>
+                <p class="text-xs text-ink-400">إدارة الدروس والشجرة التعليمية والطلاب والسحابة</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${panelUnlocked && normalizeFirebaseUrl(d.firebaseUrl) ? `
+                <button id="btn-manual-cloud-sync" class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 ${cloudConnected ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-gold-50 text-gold-800 border border-gold-200'}">
+                  ${svgIcon('cloud', 14)} ${cloudSyncing ? 'جارٍ المزامنة...' : 'مزامنة السحابة'}
+                </button>
+              ` : ''}
+              <button id="btn-close-panel" class="p-2 rounded-lg hover:bg-ink-100 text-ink-500">${svgIcon('x', 20)}</button>
+            </div>
+          </div>
+
+          ${!panelUnlocked ? `
+            <div class="flex-1 grid place-items-center p-8">
+              <div class="w-full max-w-sm text-center">
+                <div class="w-16 h-16 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center mx-auto mb-4">${svgIcon('lock', 28)}</div>
+                <h3 class="font-display text-lg font-bold text-ink-800 mb-1">دخول محميّ</h3>
+                <p class="text-sm text-ink-400 mb-5">أدخل كلمة المرور للوصول إلى لوحة المعلّم.</p>
+                <input id="inp-panel-pwd" type="password" value="${esc(pwdInput)}" placeholder="كلمة المرور"
+                  class="w-full text-center tracking-widest px-4 py-3 rounded-xl border bg-white outline-none transition ${pwdError ? 'border-rose-400 ring-4 ring-rose-100' : 'border-ink-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100'}" />
+                ${pwdError ? `<p class="text-rose-500 text-xs mt-2">كلمة المرور غير صحيحة.</p>` : ''}
+                <button id="btn-unlock-panel" class="mt-4 w-full py-3 rounded-xl bg-brand-600 text-white font-bold hover:bg-brand-700 transition">دخول</button>
+              </div>
+            </div>
+          ` : `
+            <div class="flex gap-1 px-4 pt-2.5 bg-white border-b border-ink-100 overflow-x-auto no-scrollbar">
+              ${[
+                { id: 'content', label: 'توليد درس جديد' },
+                { id: 'bank', label: `مكتبة الاختبارات (${quizBank.length})` },
+                { id: 'students', label: `الطلاب والفصول ${unlistedList.length ? `(${unlistedList.length} جديد)` : ''}` },
+                { id: 'results', label: 'سجلّ النتائج' },
+                { id: 'general', label: 'الإعدادات والشجرة' }
+              ].map(t => `
+                <button data-tab="${t.id}" class="btn-panel-tab shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-t-lg transition border-b-2 -mb-px ${panelTab === t.id ? 'border-brand-600 text-brand-700' : 'border-transparent text-ink-400 hover:text-ink-700'}">
+                  ${t.label}
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5 no-scrollbar space-y-5">
+
+              <!-- TAB 1: CONTENT GENERATION -->
+              ${panelTab === 'content' ? `
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                  <h3 class="font-display font-bold text-sm text-ink-800 flex items-center gap-2">${svgIcon('layers', 16, 'text-brand-600')} تحديد المادّة والمرحلة والصفّ للدرس</h3>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">المادّة الدراسية</span>
+                      <select id="sel-content-subject" class="w-full px-3 py-2.5 rounded-xl border border-ink-200 bg-white text-sm font-bold">
+                        ${SUBJECT_OPTIONS.map(sub => `<option value="${esc(sub)}" ${contentSubjectChoice === sub ? 'selected' : ''}>${esc(sub)}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">المرحلة الدراسية</span>
+                      <select id="sel-content-stage" class="w-full px-3 py-2.5 rounded-xl border border-ink-200 bg-white text-sm font-bold">
+                        ${tree.map(s => `<option value="${esc(s.name)}" ${contentStage === s.name ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">الصفّ الدراسي</span>
+                      <select id="sel-content-grade" class="w-full px-3 py-2.5 rounded-xl border border-ink-200 bg-white text-sm font-bold">
+                        ${contentGrades.map(g => `<option value="${esc(g.name)}" ${contentGrade === g.name ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                      </select>
+                    </div>
+                  </div>
+                  ${contentSubjectChoice === SUBJECT_OPTIONS[SUBJECT_OPTIONS.length - 1] ? `
+                    <div>
+                      <input id="inp-content-custom-sub" value="${esc(contentCustomSubject)}" placeholder="اكتب اسم المادّة الدراسية..." class="w-full px-3.5 py-2 rounded-xl border border-ink-200 text-sm" />
+                    </div>
+                  ` : ''}
+                </div>
+
+                <div class="rounded-2xl border-2 border-dashed border-ink-200 bg-white p-6 text-center">
+                  <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 grid place-items-center mx-auto mb-3">${svgIcon('upload', 26)}</div>
+                  <h3 class="font-display font-bold text-ink-800 mb-1">رفع محتوى الدرس للتحليل</h3>
+                  <p class="text-sm text-ink-400 mb-4">PDF، DOCX، TXT، أو صور الكتاب المدرسي (JPG/PNG/WEBP).</p>
+                  <div class="flex flex-wrap gap-2 justify-center">
+                    <button id="btn-t-file" class="px-4 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-bold hover:bg-brand-700 flex items-center gap-2">
+                      ${svgIcon('upload', 16)} اختيار ملف
+                    </button>
+                    <button id="btn-t-cam" class="px-4 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 flex items-center gap-2">
+                      ${svgIcon('camera', 16)} التقاط بالكاميرا
+                    </button>
+                    <input id="inp-t-file" type="file" multiple accept=".pdf,.docx,.txt,image/*" class="hidden" />
+                    <input id="inp-t-cam" type="file" accept="image/*" capture="environment" class="hidden" />
+                  </div>
+                </div>
+
+                ${uploadedFiles.length > 0 ? `
+                  <div class="space-y-2">
+                    ${uploadedFiles.map((f, i) => `
+                      <div class="flex items-center gap-3 bg-white rounded-xl border border-ink-100 px-4 py-3">
+                        ${f.kind === 'image' && f.dataUrl
+                          ? `<img src="${f.dataUrl}" class="w-10 h-10 rounded-lg object-cover" />`
+                          : `<div class="w-10 h-10 rounded-lg bg-ink-100 text-ink-500 grid place-items-center">${svgIcon('file', 18)}</div>`}
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-bold text-ink-800 truncate">${esc(f.name)}</p>
+                          <p class="text-xs text-ink-400">${{ image: 'صورة', pdf: 'ملف PDF', text: 'ملف نصّي', docx: 'مستند Word' }[f.kind] || f.kind}</p>
+                        </div>
+                        <button data-rm-file="${i}" class="btn-rm-file p-2 rounded-lg text-rose-500 hover:bg-rose-50">${svgIcon('trash', 16)}</button>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+
+                ${errorMsg ? `<div class="rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm px-4 py-3">${esc(errorMsg)}</div>` : ''}
+                ${statusMsg ? `<div class="rounded-xl bg-brand-50 border border-brand-100 text-brand-700 text-sm px-4 py-3 text-center">${esc(statusMsg)}</div>` : ''}
+
+                <button id="btn-generate-quiz" ${busy ? 'disabled' : ''}
+                  class="w-full py-3.5 rounded-xl bg-gradient-to-l from-brand-600 to-teal-600 text-white font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:shadow-lift transition">
+                  ${busy ? `<span class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span> جارٍ التحليل والتوليد...` : `${svgIcon('sparkles', 18)} تحليل المرفق وحفظ الاختبار في المكتبة`}
+                </button>
+              ` : ''}
+
+              <!-- TAB 2: SAVED QUIZZES BANK & PREVIEW -->
+              ${panelTab === 'bank' ? `
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-white rounded-2xl border border-ink-100 p-4">
+                  <div>
+                    <h3 class="font-display font-bold text-sm text-ink-800">مكتبة الاختبارات والمهارات المحفوظة (${quizBank.length})</h3>
+                    <p class="text-xs text-ink-400">تحكّم في إتاحة كلّ اختبار للطلاب حسب الصفّ، أو صدّره كرابط وباركود أو PDF رسميّ.</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button id="btn-import-json" class="px-3 py-2 rounded-xl border border-ink-200 text-ink-700 text-xs font-bold hover:bg-ink-100 flex items-center gap-1.5">
+                      ${svgIcon('upload', 14)} استيراد JSON
+                    </button>
+                    <input id="inp-import-json" type="file" accept="application/json,.json" class="hidden" />
+                  </div>
+                </div>
+
+                ${quizBank.length === 0 ? `
+                  <div class="bg-white rounded-2xl border border-ink-100 p-10 text-center text-ink-400">
+                    <p class="text-sm">المكتبة فارغة حاليًّا. ولّد اختبارك الأول من تبويب «توليد درس جديد».</p>
+                  </div>
+                ` : `
+                  <div class="space-y-3">
+                    ${quizBank.map(qz => {
+                      const isAvail = qz.isAvailable !== false;
+                      return `
+                      <div class="bg-white rounded-2xl border ${activePreviewQuiz?.id === qz.id ? 'border-brand-400 ring-2 ring-brand-100' : 'border-ink-100'} p-4 space-y-3">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                          <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                              <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700">${esc(qz.subject || 'مادّة')}</span>
+                              ${qz.stage ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink-100 text-ink-600">${esc(qz.stage)}</span>` : ''}
+                              ${qz.grade ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink-100 text-ink-600">${esc(qz.grade)}</span>` : ''}
+                              <span class="text-[11px] font-semibold text-ink-400">(${qz.questions.length} سؤالًا)</span>
+                            </div>
+                            <h4 class="font-display font-bold text-base text-ink-900">${esc(qz.lessonTitle)}</h4>
+                          </div>
+
+                          <button data-toggle-avail="${qz.id}" class="btn-toggle-avail px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${isAvail ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-ink-100 text-ink-500 border-ink-200'}">
+                            <span class="w-2 h-2 rounded-full ${isAvail ? 'bg-teal-500' : 'bg-ink-400'}"></span>
+                            ${isAvail ? 'متاح للطلاب' : 'مخفي عن الطلاب'}
+                          </button>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-2 border-t border-ink-100">
+                          <button data-select-preview="${qz.id}" class="btn-select-preview px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 text-xs font-bold hover:bg-brand-100 flex items-center gap-1">
+                            ${svgIcon('eye', 14)} الأسئلة والتعديل
+                          </button>
+                          <button data-open-share="${qz.id}" class="btn-open-share px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 text-xs font-bold hover:bg-teal-100 flex items-center gap-1">
+                            ${svgIcon('qr', 14)} رابط وباركود
+                          </button>
+                          <button data-open-pdf="${qz.id}" class="btn-open-pdf px-3 py-1.5 rounded-lg bg-gold-50 text-gold-800 text-xs font-bold hover:bg-gold-100 flex items-center gap-1">
+                            ${svgIcon('printer', 14)} تصدير PDF رسمي
+                          </button>
+                          <button data-export-html="${qz.id}" class="btn-export-html px-3 py-1.5 rounded-lg bg-ink-100 text-ink-700 text-xs font-bold hover:bg-ink-200 flex items-center gap-1">
+                            ${svgIcon('share', 14)} ملف HTML للطلاب
+                          </button>
+                          <button data-export-json-id="${qz.id}" class="btn-export-json-id px-2.5 py-1.5 rounded-lg border border-ink-200 text-ink-600 text-xs font-bold hover:bg-ink-50">
+                            JSON
+                          </button>
+                          <button data-del-quiz="${qz.id}" class="btn-del-quiz mr-auto p-1.5 rounded-lg text-rose-500 hover:bg-rose-50" title="حذف الاختبار">
+                            ${svgIcon('trash', 15)}
+                          </button>
+                        </div>
+                      </div>`;
+                    }).join('')}
+                  </div>
+
+                  ${activePreviewQuiz ? `
+                    <div class="pt-4 border-t border-ink-200 space-y-3">
+                      <div class="flex items-center justify-between">
+                        <h4 class="font-display font-bold text-sm text-ink-800">أسئلة: «${esc(activePreviewQuiz.lessonTitle)}»</h4>
+                        <span class="text-xs text-ink-400">يمكنك تعديل نصّ أيّ سؤال أو إجابته</span>
+                      </div>
+                      ${activePreviewQuiz.questions.map((q, qi) => `
+                        <div class="bg-white rounded-2xl border border-ink-100 p-4">
+                          <div class="flex items-start gap-3">
+                            <span class="shrink-0 w-7 h-7 rounded-lg bg-ink-100 text-ink-600 grid place-items-center text-xs font-bold">${qi + 1}</span>
+                            <div class="flex-1 min-w-0">
+                              <div class="flex flex-wrap gap-1.5 mb-2">
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${levelColors[q.level]}">${levelNames[q.level]}</span>
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink-100 text-ink-600">${esc(q.bloom)}</span>
+                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-ink-100 text-ink-600">${esc(q.dok)}</span>
+                              </div>
+                              ${editingQId === q.id
+                                ? `<textarea id="txt-edit-q" rows="2" class="w-full px-3 py-2 rounded-lg border border-ink-200 text-sm">${esc(editQText)}</textarea>`
+                                : `<p class="font-reading-naskh text-base font-bold text-ink-800">${esc(q.text)}</p>`}
+                              <div class="mt-2 space-y-1.5">
+                                ${q.options.map((opt, oi) => `
+                                  <div class="font-reading-naskh text-sm px-3 py-1.5 rounded-lg border ${(editingQId === q.id ? editQCorrect : q.correctIndex) === oi ? 'border-teal-300 bg-teal-50 text-teal-800 font-bold' : 'border-ink-100 text-ink-600'}">
+                                    ${esc(opt)}
+                                  </div>
+                                `).join('')}
+                              </div>
+                              ${editingQId === q.id ? `
+                                <div class="mt-2 flex items-center gap-2">
+                                  <span class="text-xs text-ink-400">الإجابة الصحيحة:</span>
+                                  <select id="sel-edit-correct" class="text-sm px-2 py-1 rounded-lg border border-ink-200">
+                                    ${q.options.map((_, oi) => `<option value="${oi}" ${editQCorrect === oi ? 'selected' : ''}>الخيار ${oi + 1}</option>`).join('')}
+                                  </select>
+                                </div>
+                              ` : ''}
+                              <p class="font-reading-naskh text-xs text-ink-500 mt-2 bg-ink-50 rounded-lg p-2">${esc(q.explanation)}</p>
+                              <div class="flex gap-3 mt-2">
+                                ${editingQId === q.id
+                                  ? `<button data-commit-q="${q.id}" class="btn-commit-q text-xs text-teal-600 font-bold flex items-center gap-1">${svgIcon('check', 14)} حفظ</button>`
+                                  : `<button data-edit-q="${q.id}" class="btn-edit-q text-xs text-brand-600 font-bold flex items-center gap-1">${svgIcon('pencil', 14)} تعديل</button>`}
+                                <button data-del-q="${q.id}" class="btn-del-q text-xs text-rose-500 font-bold flex items-center gap-1">${svgIcon('trash', 14)} حذف</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                `}
+              ` : ''}
+
+              <!-- TAB 3: STUDENT ROSTER & EXCEL IMPORT & UNLISTED APPROVAL -->
+              ${panelTab === 'students' ? `
+                ${unlistedList.length > 0 ? `
+                  <div class="bg-gold-50 border-2 border-gold-300 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center gap-2 text-gold-900">
+                      ${svgIcon('alert', 18)}
+                      <h3 class="font-display font-bold text-sm">طلاب كتبوا أسماءهم يدويًّا («غير موجود» في القائمة — ${unlistedList.length})</h3>
+                    </div>
+                    <p class="text-xs text-gold-800">راجع الاسم وعدّله إملائيًّا ثم اعتمده ليُضاف تلقائيًّا إلى قائمة الفصل المناسب:</p>
+                    <div class="space-y-2.5">
+                      ${unlistedList.map(u => {
+                        const isResolving = resolvingUnlistedId === u.id;
+                        const resGrades = getGradesForStage(tree, isResolving ? resolveStage : u.stage);
+                        const resSections = getSectionsForGrade(tree, isResolving ? resolveStage : u.stage, isResolving ? resolveGrade : u.grade);
+                        return `
+                        <div class="bg-white rounded-xl border border-gold-200 p-3">
+                          ${!isResolving ? `
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p class="text-sm font-bold text-ink-900">${esc(u.typedName)}</p>
+                                <p class="text-xs text-ink-500">${esc(u.stage)} — ${esc(u.grade)} — فصل ${esc(u.section)}</p>
+                              </div>
+                              <div class="flex gap-1.5">
+                                <button data-start-resolve="${u.id}" class="btn-start-resolve px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700">
+                                  تعديل واعتماد للفصل
+                                </button>
+                                <button data-dismiss-unlisted="${u.id}" class="btn-dismiss-unlisted p-1.5 rounded-lg text-rose-500 hover:bg-rose-50">
+                                  ${svgIcon('trash', 15)}
+                                </button>
+                              </div>
+                            </div>
+                          ` : `
+                            <div class="space-y-2">
+                              <input id="inp-resolve-name" value="${esc(resolveEditName)}" class="w-full px-3 py-2 rounded-lg border border-ink-200 text-sm font-bold" />
+                              <div class="grid grid-cols-3 gap-2">
+                                <select id="sel-resolve-stage" class="px-2 py-1.5 rounded-lg border border-ink-200 text-xs font-bold">
+                                  ${tree.map(s => `<option value="${esc(s.name)}" ${resolveStage === s.name ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+                                </select>
+                                <select id="sel-resolve-grade" class="px-2 py-1.5 rounded-lg border border-ink-200 text-xs font-bold">
+                                  ${resGrades.map(g => `<option value="${esc(g.name)}" ${resolveGrade === g.name ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                                </select>
+                                <select id="sel-resolve-section" class="px-2 py-1.5 rounded-lg border border-ink-200 text-xs font-bold">
+                                  ${resSections.map(sec => `<option value="${esc(sec)}" ${resolveSection === sec ? 'selected' : ''}>${esc(sec)}</option>`).join('')}
+                                </select>
+                              </div>
+                              <div class="flex gap-2 justify-end">
+                                <button id="btn-cancel-resolve" class="px-3 py-1.5 rounded-lg border border-ink-200 text-xs font-bold">إلغاء</button>
+                                <button data-confirm-resolve="${u.id}" class="btn-confirm-resolve px-4 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold">اعتماد وإضافة للفصل</button>
+                              </div>
+                            </div>
+                          `}
+                        </div>`;
+                      }).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="font-display font-bold text-sm text-ink-800 flex items-center gap-2">${svgIcon('users', 17, 'text-brand-600')} إدارة قوائم الطلاب حسب الفصل</h3>
+                    <button id="btn-dl-excel-tpl" class="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1">
+                      ${svgIcon('download', 13)} تحميل نموذج Excel فارغ
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">المرحلة</span>
+                      <select id="sel-roster-stage" class="w-full px-3 py-2 rounded-xl border border-ink-200 text-sm font-bold">
+                        ${tree.map(s => `<option value="${esc(s.name)}" ${rosterStage === s.name ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">الصفّ</span>
+                      <select id="sel-roster-grade" class="w-full px-3 py-2 rounded-xl border border-ink-200 text-sm font-bold">
+                        ${rosterGrades.map(g => `<option value="${esc(g.name)}" ${rosterGrade === g.name ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">الفصل</span>
+                      <select id="sel-roster-section" class="w-full px-3 py-2 rounded-xl border border-ink-200 text-sm font-bold">
+                        ${rosterSections.map(sec => `<option value="${esc(sec)}" ${rosterSection === sec ? 'selected' : ''}>${esc(sec)}</option>`).join('')}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-ink-100">
+                    <div class="rounded-xl bg-teal-50/60 border border-teal-200 p-3.5 flex flex-col justify-between">
+                      <div>
+                        <p class="text-xs font-bold text-teal-900 mb-1">1. استيراد أسماء الفصل من ملف Excel</p>
+                        <p class="text-[11px] text-teal-700 mb-3">ارفع ملف (.xlsx أو .xls أو .csv) وسيتمّ استخراج الأسماء وربطها بهذا الفصل فورًا.</p>
+                      </div>
+                      <button id="btn-import-excel-roster" class="w-full py-2 rounded-xl bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 flex items-center justify-center gap-1.5">
+                        ${svgIcon('upload', 15)} اختيار ملف Excel
+                      </button>
+                      <input id="inp-excel-roster" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+                    </div>
+
+                    <div class="rounded-xl bg-ink-50 border border-ink-200 p-3.5 space-y-2">
+                      <p class="text-xs font-bold text-ink-800">2. أو الصق الأسماء دفعة واحدة (اسم في كلّ سطر)</p>
+                      <textarea id="txt-batch-names" rows="3" placeholder="أحمد محمّد علي&#10;سعد خالد القحطاني" class="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-xs">${esc(batchNamesText)}</textarea>
+                      <button id="btn-add-batch-names" class="w-full py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700">
+                        إضافة القائمة إلى الفصل
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="pt-2">
+                    <div class="flex items-center justify-between mb-2">
+                      <p class="text-xs font-bold text-ink-700">الطلاب المسجّلون في (${esc(rosterGrade)} — فصل ${esc(rosterSection)}): ${currentClassStudents.length} طالبًا</p>
+                      ${currentClassStudents.length > 0 ? `<button id="btn-clear-class-roster" class="text-xs text-rose-500 font-bold hover:underline">حذف الكلّ</button>` : ''}
+                    </div>
+                    ${currentClassStudents.length === 0 ? `
+                      <p class="text-xs text-ink-400 bg-ink-50 rounded-xl p-4 text-center">لا يوجد طلاب مسجّلون في هذا الفصل بعد (سيظهر للطالب حقل كتابة الاسم مباشرةً).</p>
+                    ` : `
+                      <div class="max-h-60 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-1">
+                        ${currentClassStudents.map((stName, idx) => `
+                          <div class="flex items-center justify-between bg-ink-50 border border-ink-100 rounded-lg px-3 py-1.5 text-xs">
+                            <span class="font-bold text-ink-800 truncate">${idx + 1}. ${esc(stName)}</span>
+                            <button data-rm-student="${idx}" class="btn-rm-student text-rose-500 hover:bg-rose-100 p-1 rounded">${svgIcon('x', 13)}</button>
+                          </div>
+                        `).join('')}
+                      </div>
+                    `}
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- TAB 4: RESULTS LOG -->
+              ${panelTab === 'results' ? `
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-brand-600">${svgIcon('users', 18)}</span>
+                    <div>
+                      <h3 class="font-display font-bold text-sm text-ink-800">سجلّ إنجاز الطلاب (${resultsLog.length})</h3>
+                      <p class="text-xs text-ink-400">يُسجَّل تلقائيًّا من جهازك ومن هواتف الطلاب عبر السحابة</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button id="btn-export-csv" ${resultsLog.length === 0 ? 'disabled' : ''} class="px-3 py-2 rounded-xl bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 disabled:opacity-50 flex items-center gap-1.5">
+                      ${svgIcon('download', 14)} تصدير Excel
+                    </button>
+                    ${resultsLog.length > 0 ? `
+                      <button id="btn-clear-results" class="px-3 py-2 rounded-xl border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50">مسح السجلّ</button>
+                    ` : ''}
+                  </div>
+                </div>
+
+                ${resultsLog.length === 0 ? `
+                  <div class="bg-white rounded-2xl border border-ink-100 p-10 text-center text-ink-400">
+                    <p class="text-sm">لا توجد نتائج مسجّلة بعد.</p>
+                  </div>
+                ` : `
+                  <div class="space-y-2.5">
+                    ${resultsLog.map(r => `
+                      <div class="bg-white rounded-2xl border border-ink-100 p-4 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-2">
+                            <p class="text-sm font-bold text-ink-800 truncate">${esc(r.studentName)}</p>
+                            ${r.wasUnlisted ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold-100 text-gold-800">غير موجود</span>` : ''}
+                          </div>
+                          <p class="text-xs text-ink-500">${esc(r.stage || '')} — ${esc(r.grade)} — فصل ${esc(r.section)} | ${esc(r.subject)} (${esc(r.lessonTitle)})</p>
+                          <p class="text-[11px] text-ink-400 mt-0.5">${esc(r.date)}</p>
+                        </div>
+                        <div class="text-left shrink-0">
+                          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold ${r.percentage === 100 ? 'bg-gold-100 text-gold-800' : 'bg-brand-50 text-brand-700'}">
+                            ${r.totalCorrect}/${r.totalQuestions} (${r.percentage}%)
+                          </span>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                `}
+              ` : ''}
+
+              <!-- TAB 5: GENERAL SETTINGS & ACADEMIC TREE -->
+              ${panelTab === 'general' ? `
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-4">
+                  <div class="flex items-center gap-2 text-ink-800">
+                    <span class="text-brand-600">${svgIcon('folder', 18)}</span>
+                    <div>
+                      <h3 class="font-display font-bold text-sm">شجرة البيانات التعليمية (مرحلة ← صفّ ← فصل)</h3>
+                      <p class="text-xs text-ink-400">تتحكّم هذه الشجرة في القوائم المنسدلة لواجهة الطالب وقوائم الفصول</p>
+                    </div>
+                  </div>
+
+                  <div class="flex gap-2">
+                    <input id="inp-new-stage" value="${esc(state.newStageName)}" placeholder="أضف مرحلة جديدة (مثال: المرحلة الثانوية)..." class="flex-1 px-3 py-2 rounded-xl border border-ink-200 text-xs font-bold" />
+                    <button id="btn-add-stage" class="px-3.5 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 flex items-center gap-1">
+                      ${svgIcon('plus', 14)} إضافة مرحلة
+                    </button>
+                  </div>
+
+                  <div class="space-y-3">
+                    ${tree.map((stg, sIdx) => `
+                      <div class="rounded-xl border border-ink-200 bg-ink-50/60 p-3 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                          <span class="text-sm font-extrabold text-brand-800">${esc(stg.name)}</span>
+                          <button data-del-stage="${sIdx}" class="btn-del-stage text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded-lg font-bold">حذف المرحلة</button>
+                        </div>
+
+                        <div class="space-y-2 pr-3 border-r-2 border-brand-200">
+                          ${(stg.grades || []).map((grd, gIdx) => `
+                            <div class="bg-white rounded-lg border border-ink-100 p-2.5">
+                              <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-bold text-ink-800">${esc(grd.name)}</span>
+                                <button data-del-grade="${sIdx}:${gIdx}" class="btn-del-grade text-[11px] text-rose-500 hover:underline">حذف الصفّ</button>
+                              </div>
+                              <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-[11px] text-ink-400">الفصول:</span>
+                                ${(grd.sections || []).map((sec, secIdx) => `
+                                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 text-xs font-bold border border-teal-200">
+                                    ${esc(sec)}
+                                    <button data-del-sec="${sIdx}:${gIdx}:${secIdx}" class="btn-del-sec text-rose-500 hover:text-rose-700">×</button>
+                                  </span>
+                                `).join('')}
+                                <div class="inline-flex items-center gap-1">
+                                  <input data-sec-inp="${sIdx}:${gIdx}" placeholder="فصل جديد" class="inp-inline-sec w-20 px-2 py-0.5 rounded border border-ink-200 text-xs" />
+                                  <button data-add-sec="${sIdx}:${gIdx}" class="btn-add-sec px-2 py-0.5 rounded bg-teal-600 text-white text-xs font-bold">+</button>
+                                </div>
+                              </div>
+                            </div>
+                          `).join('')}
+
+                          <div class="flex gap-1.5 pt-1">
+                            <input data-grade-inp="${sIdx}" placeholder="أضف صفًّا جديدًا في ${esc(stg.name)}..." class="inp-inline-grade flex-1 px-2.5 py-1.5 rounded-lg border border-ink-200 bg-white text-xs" />
+                            <button data-add-grade="${sIdx}" class="btn-add-grade px-3 py-1.5 rounded-lg bg-ink-800 text-white text-xs font-bold">+ صفّ</button>
+                          </div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                  <div class="flex items-center gap-2 text-ink-800">
+                    <span class="text-teal-600">${svgIcon('cloud', 18)}</span>
+                    <div>
+                      <h3 class="font-display font-bold text-sm">الربط السحابي الفوري (Firebase Realtime Database)</h3>
+                      <p class="text-xs text-ink-400">اختياري — يتيح فتح الاختبار بالباركود من أيّ جوّال وإعادة الدرجات إلى جهازك لحظيًّا</p>
+                    </div>
+                  </div>
+                  <input id="inp-firebase-url" value="${esc(d.firebaseUrl)}" placeholder="https://your-project-default-rtdb.firebaseio.com" dir="ltr"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-ink-200 text-xs font-mono" />
+                  <p class="text-[11px] text-ink-400">تأكّد من ضبط قواعد القراءة والكتابة في Firebase Realtime Database على السماح (<code dir="ltr" class="bg-ink-100 px-1.5 py-0.5 rounded text-ink-700">".read": true, ".write": true</code>) أثناء الحصّة.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                  <div class="flex items-center gap-2 text-ink-700"><span class="text-brand-600">${svgIcon('key', 16)}</span><h3 class="font-display font-bold text-sm">مفتاح Gemini API ونموذج الذكاء الاصطناعي</h3></div>
+                  <div class="relative">
+                    <input id="inp-api-key" type="${showKey ? 'text' : 'password'}" value="${esc(d.geminiApiKey)}" placeholder="AQ... أو AIza..."
+                      class="w-full px-4 py-3 pl-11 rounded-xl border border-ink-200 bg-white outline-none focus:border-brand-500 text-sm" dir="ltr" />
+                    <button id="btn-toggle-key" class="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-ink-400 hover:bg-ink-100">
+                      ${svgIcon(showKey ? 'eyeOff' : 'eye', 16)}
+                    </button>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">النموذج الأساسي المفضّل</span>
+                      <select id="sel-gemini-model" class="w-full px-3 py-2.5 rounded-xl border border-ink-200 bg-white text-sm">
+                        ${GEMINI_MODELS.map(m => `<option value="${m.value}" ${d.geminiModel === m.value ? 'selected' : ''}>${m.label}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div>
+                      <span class="block text-xs text-ink-500 mb-1">خطّ القراءة للطلاب</span>
+                      <select id="sel-reading-font" class="w-full px-3 py-2.5 rounded-xl border border-ink-200 bg-white text-sm font-semibold">
+                        <option value="naskh" ${d.readingFont === 'naskh' ? 'selected' : ''}>خطّ النسخ المدرسيّ (Noto Naskh)</option>
+                        <option value="tajawal" ${d.readingFont === 'tajawal' ? 'selected' : ''}>خطّ تجوّل الواضح (Tajawal)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                  <h3 class="font-display font-bold text-sm text-ink-800">الترويسة الرسمية وعبارة الواجهة والتوقيعات</h3>
+                  <div>
+                    <span class="block text-xs text-ink-500 mb-1">الترويسة العليا في الشهادة وملفّات PDF</span>
+                    <input id="inp-inst-header" value="${esc(d.institutionHeader)}" class="w-full px-3 py-2 rounded-xl border border-ink-200 text-sm" />
+                  </div>
+                  <div>
+                    <span class="block text-xs text-ink-500 mb-1">عبارة الواجهة الرئيسية للطالب</span>
+                    <input id="inp-welcome-banner" value="${esc(d.welcomeBanner)}" class="w-full px-3 py-2 rounded-xl border border-ink-200 text-sm" />
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-xl bg-ink-50 border border-ink-100">
+                    <div>
+                      <span class="block text-[11px] text-ink-500 mb-1">المسمّى الأول</span>
+                      <input id="inp-r1-title" value="${esc(d.role1Title)}" class="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm font-bold" />
+                    </div>
+                    <div>
+                      <span class="block text-[11px] text-ink-500 mb-1">الاسم الأول</span>
+                      <input id="inp-r1-name" value="${esc(d.role1Name)}" class="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-xl bg-ink-50 border border-ink-100">
+                    <div>
+                      <span class="block text-[11px] text-ink-500 mb-1">المسمّى الثاني (قابل للتعديل)</span>
+                      <input id="inp-r2-title" value="${esc(d.role2Title)}" class="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm font-bold" />
+                    </div>
+                    <div>
+                      <span class="block text-[11px] text-ink-500 mb-1">الاسم الثاني (اتركه فارغًا لإخفائه)</span>
+                      <input id="inp-r2-name" value="${esc(d.role2Name)}" class="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-xl bg-ink-50 border border-ink-100">
+                    <div>
+                      <span class="block text-[11px] text-ink-500 mb-1">المسمّى الثالث (قابل للتعديل)</span>
+                      <input id="inp-r3-title" value="${esc(d.role3Title)}" class="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm font-bold" />
+                    </div>
+                    <div>
+                      <span class="block text-[11px] text-ink-500 mb-1">الاسم الثالث (اتركه فارغًا لإخفائه)</span>
+                      <input id="inp-r3-name" value="${esc(d.role3Name)}" class="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <span class="block text-xs text-ink-500 mb-1">تذييل الحقوق أسفل الصفحة</span>
+                    <input id="inp-footer-text" value="${esc(d.footerText)}" class="w-full px-3 py-2 rounded-xl border border-ink-200 text-sm" />
+                  </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                  <h3 class="font-display font-bold text-sm text-ink-800">الشعارات المعتمدة (تظهر في الشهادة ونسخ PDF الرسمية)</h3>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="rounded-xl border border-ink-200 bg-ink-50 p-3 flex flex-col items-center gap-2">
+                      <span class="text-xs text-ink-500">شعار المدرسة/الوزارة</span>
+                      ${d.schoolLogo ? `<img src="${d.schoolLogo}" class="w-16 h-16 object-contain" />` : `<div class="w-16 h-16 rounded-lg bg-white border border-ink-200 grid place-items-center text-ink-300">${svgIcon('image', 22)}</div>`}
+                      <div class="flex gap-1.5">
+                        <button id="btn-up-school-logo" class="text-xs px-2.5 py-1.5 rounded-lg bg-white border border-ink-200 text-ink-700 hover:bg-ink-100">رفع</button>
+                        ${d.schoolLogo ? `<button id="btn-rm-school-logo" class="text-xs px-2.5 py-1.5 rounded-lg text-rose-500 hover:bg-rose-50">إزالة</button>` : ''}
+                      </div>
+                      <input id="inp-school-logo" type="file" accept="image/*" class="hidden" />
+                    </div>
+                    <div class="rounded-xl border border-ink-200 bg-ink-50 p-3 flex flex-col items-center gap-2">
+                      <span class="text-xs text-ink-500">شعار المعلّم/المنصّة</span>
+                      ${d.teacherLogo ? `<img src="${d.teacherLogo}" class="w-16 h-16 object-contain" />` : `<div class="w-16 h-16 rounded-lg bg-white border border-ink-200 grid place-items-center text-ink-300">${svgIcon('image', 22)}</div>`}
+                      <div class="flex gap-1.5">
+                        <button id="btn-up-teacher-logo" class="text-xs px-2.5 py-1.5 rounded-lg bg-white border border-ink-200 text-ink-700 hover:bg-ink-100">رفع</button>
+                        ${d.teacherLogo ? `<button id="btn-rm-teacher-logo" class="text-xs px-2.5 py-1.5 rounded-lg text-rose-500 hover:bg-rose-50">إزالة</button>` : ''}
+                      </div>
+                      <input id="inp-teacher-logo" type="file" accept="image/*" class="hidden" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-ink-100 p-4 space-y-3">
+                  <h3 class="font-display font-bold text-sm text-ink-800">خيارات الاختبار والأمان</h3>
+                  <div>
+                    <span class="block text-xs text-ink-500 mb-1">عدد الأسئلة لكل مستوى (${d.questionsPerLevel}) — الإجمالي: ${d.questionsPerLevel * 3} سؤالًا</span>
+                    <input id="inp-q-per-lvl" type="range" min="3" max="10" value="${d.questionsPerLevel}" class="w-full accent-brand-600" />
+                  </div>
+                  <div class="flex items-center justify-between gap-3 pt-1">
+                    <span class="text-sm text-ink-700">وضع رفع الطالب المباشر</span>
+                    <button id="btn-toggle-direct" class="w-11 h-6 rounded-full transition relative ${d.directUploadMode ? 'bg-brand-600' : 'bg-ink-200'}">
+                      <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${d.directUploadMode ? 'left-0.5' : 'right-0.5'}"></span>
+                    </button>
+                  </div>
+                  <div class="pt-2 border-t border-ink-100">
+                    <span class="block text-xs text-ink-500 mb-1">كلمة مرور لوحة تحكّم المعلّم</span>
+                    <input id="inp-new-pwd" value="${esc(d.panelPassword)}" class="w-full px-3 py-2 rounded-xl border border-ink-200 text-sm" dir="ltr" />
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="px-5 py-3 bg-white border-t border-ink-100 flex items-center justify-between">
+              <p class="text-xs text-ink-400 truncate max-w-[55%]">${esc(d.footerText)}</p>
+              <button id="btn-save-settings" class="px-5 py-2.5 rounded-xl bg-brand-600 text-white font-bold flex items-center gap-2 hover:bg-brand-700 transition">
+                ${savedToast ? `${svgIcon('check', 16)} تم الحفظ والمزامنة` : `${svgIcon('save', 16)} حفظ الإعدادات`}
+              </button>
+            </div>
+          `}
+        </div>
+      </div>`;
+    }
+
+    // ===================== 12. EVENT BINDINGS =====================
+    function bindEvents() {
+      const tree = state.settings.academicTree || [];
+
+      const selStStage = document.getElementById('sel-st-stage');
+      if (selStStage) selStStage.onchange = e => {
+        state.student.stage = e.target.value;
+        const grs = getGradesForStage(tree, state.student.stage);
+        state.student.grade = grs[0]?.name || '';
+        state.student.section = grs[0]?.sections?.[0] || '';
+        state.student.selectedFromList = '';
+        render();
+      };
+
+      const selStGrade = document.getElementById('sel-st-grade');
+      if (selStGrade) selStGrade.onchange = e => {
+        state.student.grade = e.target.value;
+        const secs = getSectionsForGrade(tree, state.student.stage, state.student.grade);
+        state.student.section = secs[0] || '';
+        state.student.selectedFromList = '';
+        render();
+      };
+
+      const selStSection = document.getElementById('sel-st-section');
+      if (selStSection) selStSection.onchange = e => {
+        state.student.section = e.target.value;
+        state.student.selectedFromList = '';
+        render();
+      };
+
+      const selStNameList = document.getElementById('sel-st-name-list');
+      if (selStNameList) selStNameList.onchange = e => {
+        state.student.selectedFromList = e.target.value;
+        render();
+      };
+
+      const inpStTypedName = document.getElementById('inp-st-typed-name');
+      if (inpStTypedName) inpStTypedName.oninput = e => {
+        state.student.typedName = e.target.value;
+      };
+
+      const selAvailQuiz = document.getElementById('sel-available-quiz');
+      if (selAvailQuiz) selAvailQuiz.onchange = e => {
+        state.selectedQuizId = e.target.value;
+        render();
+      };
+
+      const btnStart = document.getElementById('btn-start-quiz');
+      if (btnStart) btnStart.onclick = async () => {
+        state.touched = true;
+        const classStudents = state.roster[rosterKey(state.student.stage, state.student.grade, state.student.section)] || [];
+        const hasClassList = classStudents.length > 0;
+        const wasUnlisted = hasClassList && state.student.selectedFromList === '__UNLISTED__';
+        const finalName = (!hasClassList || wasUnlisted) ? state.student.typedName.trim() : state.student.selectedFromList.trim();
+
+        const directMode = state.settings.directUploadMode && !IS_STUDENT_EXPORT;
+        const matchingQuizzes = getAvailableQuizzesForStudent(state.student.stage, state.student.grade);
+        const targetQuiz = directMode
+          ? state.pendingDirectQuiz
+          : (matchingQuizzes.find(q => q.id === state.selectedQuizId) || matchingQuizzes[0]);
+
+        if (!state.student.stage || !state.student.grade || !state.student.section || !finalName || !targetQuiz) {
+          render();
+          return;
+        }
+
+        if (wasUnlisted) {
+          const unlistedEntry = {
+            id: Date.now(),
+            typedName: finalName,
+            stage: state.student.stage,
+            grade: state.student.grade,
+            section: state.student.section,
+            resolved: false
+          };
+          state.unlistedStudents.unshift(unlistedEntry);
+          saveUnlisted(state.unlistedStudents);
+          const fbBase = normalizeFirebaseUrl(state.settings.firebaseUrl);
+          if (fbBase) {
+            fbRequest(fbBase, 'unlistedStudents', 'POST', unlistedEntry).catch(() => {});
+          }
+        }
+
+        sfx.click();
+        state.student.finalName = finalName;
+        state.student.wasUnlisted = wasUnlisted;
+        state.activeQuiz = targetQuiz;
+        state.activeRunQuiz = buildShuffledRunQuiz(targetQuiz);
+        state.qIndex = 0;
+        state.selectedOption = null;
+        state.revealed = false;
+        state.answers = [];
+        state.phase = 'quiz';
+        render();
+      };
+
+      const btnDirectFile = document.getElementById('btn-direct-file');
+      const inpDirectFile = document.getElementById('inp-direct-file');
+      if (btnDirectFile && inpDirectFile) {
+        btnDirectFile.onclick = () => inpDirectFile.click();
+        inpDirectFile.onchange = async e => {
+          const files = e.target.files;
+          if (!files || !files.length) return;
+          state.errorMsg = '';
+          state.busy = true;
+          state.statusMsg = 'جارٍ قراءة الملف وتحليله...';
+          render();
+          try {
+            const ingested = [];
+            for (const f of Array.from(files)) ingested.push(await ingestFile(f));
+            state.referenceAssets = ingested.map(f => ({ name: f.name, kind: f.kind, dataUrl: f.dataUrl, text: f.text }));
+            const generated = await generateQuizFromFiles(
+              ingested, state.settings.geminiApiKey, state.settings.questionsPerLevel, state.settings.geminiModel,
+              { subject: SUBJECT_OPTIONS[0], stage: state.student.stage, grade: state.student.grade },
+              msg => { state.statusMsg = msg; render(); }
+            );
+            sfx.click();
+            state.pendingDirectQuiz = generated;
+          } catch (err) {
+            state.errorMsg = err.message || 'تعذّر توليد الاختبار.';
+          } finally {
+            state.busy = false;
+            state.statusMsg = '';
+            render();
+          }
+        };
+      }
+      const btnDirectCam = document.getElementById('btn-direct-cam');
+      const inpDirectCam = document.getElementById('inp-direct-cam');
+      if (btnDirectCam && inpDirectCam) {
+        btnDirectCam.onclick = () => inpDirectCam.click();
+        inpDirectCam.onchange = inpDirectFile ? inpDirectFile.onchange : null;
+      }
+
+      const btnFontUp = document.getElementById('btn-qfont-up');
+      const btnFontDown = document.getElementById('btn-qfont-down');
+      if (btnFontUp) btnFontUp.onclick = () => { state.quizFontScale = Math.min(130, state.quizFontScale + 15); render(); };
+      if (btnFontDown) btnFontDown.onclick = () => { state.quizFontScale = Math.max(100, state.quizFontScale - 15); render(); };
+
+      const btnExit = document.getElementById('btn-quiz-exit');
+      if (btnExit) btnExit.onclick = () => { state.phase = 'onboarding'; state.refDrawerOpen = false; render(); };
+
+      const btnMute = document.getElementById('btn-toggle-mute');
+      if (btnMute) btnMute.onclick = () => { isAudioMuted = !isAudioMuted; render(); };
+
+      const btnOpenRef = document.getElementById('btn-open-ref');
+      const btnCloseRef = document.getElementById('btn-close-ref');
+      const refBackdrop = document.getElementById('ref-backdrop');
+      if (btnOpenRef) btnOpenRef.onclick = () => { state.refDrawerOpen = true; render(); };
+      if (btnCloseRef) btnCloseRef.onclick = () => { state.refDrawerOpen = false; render(); };
+      if (refBackdrop) refBackdrop.onclick = () => { state.refDrawerOpen = false; render(); };
+
+      const btnZin = document.getElementById('btn-ref-zin');
+      const btnZout = document.getElementById('btn-ref-zout');
+      if (btnZin) btnZin.onclick = () => { state.refZoom = Math.min(200, state.refZoom + 20); render(); };
+      if (btnZout) btnZout.onclick = () => { state.refZoom = Math.max(60, state.refZoom - 20); render(); };
+
+      document.querySelectorAll('.btn-quiz-opt').forEach(btn => {
+        btn.onclick = () => {
+          if (state.revealed) return;
+          const activeQuiz = state.activeRunQuiz || state.activeQuiz;
+          const idx = Number(btn.getAttribute('data-opt-idx'));
+          const q = activeQuiz.questions[state.qIndex];
+          const correct = idx === q.correctIndex;
+          state.selectedOption = idx;
+          state.revealed = true;
+          state.answers.push({ questionId: q.id, selectedIndex: idx, correct });
+          if (correct) sfx.correct(); else sfx.wrong();
+          render();
+        };
+      });
+
+      const btnNextQ = document.getElementById('btn-next-q');
+      if (btnNextQ) btnNextQ.onclick = () => {
+        sfx.click();
+        const activeQuiz = state.activeRunQuiz || state.activeQuiz;
+        if (state.qIndex + 1 >= activeQuiz.questions.length) {
+          const qs = activeQuiz.questions;
+          const levelResults = [1, 2, 3].map(lvl => {
+            const lvlQs = qs.filter(q => q.level === lvl);
+            const lvlAns = state.answers.filter(a => lvlQs.find(q => q.id === a.questionId));
+            return { level: lvl, correct: lvlAns.filter(a => a.correct).length, total: lvlQs.length };
+          });
+          const totalCorrect = state.answers.filter(a => a.correct).length;
+          const totalQuestions = qs.length;
+          const percentage = totalQuestions ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+          const completedAt = Date.now();
+
+          const stSnapshot = {
+            name: state.student.finalName || state.student.typedName,
+            stage: state.student.stage,
+            grade: state.student.grade,
+            section: state.student.section
+          };
+
+          state.result = {
+            student: stSnapshot,
+            quiz: activeQuiz,
+            levelResults,
+            totalCorrect,
+            totalQuestions,
+            percentage,
+            completedAt
+          };
+
+          const logEntry = {
+            id: completedAt,
+            date: new Date(completedAt).toLocaleString('ar-SA'),
+            studentName: stSnapshot.name,
+            stage: stSnapshot.stage,
+            grade: stSnapshot.grade,
+            section: stSnapshot.section,
+            wasUnlisted: Boolean(state.student.wasUnlisted),
+            subject: activeQuiz.subject || 'عام',
+            lessonTitle: activeQuiz.lessonTitle,
+            lvl1: `${levelResults[0].correct}/${levelResults[0].total}`,
+            lvl2: `${levelResults[1].correct}/${levelResults[1].total}`,
+            lvl3: `${levelResults[2].correct}/${levelResults[2].total}`,
+            totalCorrect,
+            totalQuestions,
+            percentage
+          };
+
+          appendResultLog(logEntry);
+          const fbBase = normalizeFirebaseUrl(state.settings.firebaseUrl);
+          if (fbBase) {
+            fbRequest(fbBase, 'results', 'POST', logEntry).catch(() => {});
+          }
+
+          sfx.complete();
+          state.phase = 'certificate';
+        } else {
+          state.qIndex += 1;
+          state.selectedOption = null;
+          state.revealed = false;
+        }
+        render();
+      };
+
+      const btnCertHome = document.getElementById('btn-cert-home');
+      if (btnCertHome) btnCertHome.onclick = () => { state.phase = 'onboarding'; render(); };
+
+      const btnCertRetake = document.getElementById('btn-cert-retake');
+      if (btnCertRetake) btnCertRetake.onclick = () => {
+        sfx.click();
+        state.activeRunQuiz = buildShuffledRunQuiz(state.activeQuiz);
+        state.qIndex = 0;
+        state.selectedOption = null;
+        state.revealed = false;
+        state.answers = [];
+        state.phase = 'quiz';
+        render();
+      };
+
+      const btnCertPrint = document.getElementById('btn-cert-print');
+      if (btnCertPrint) btnCertPrint.onclick = () => { sfx.click(); window.print(); };
+
+      const btnCertPng = document.getElementById('btn-cert-png');
+      if (btnCertPng) btnCertPng.onclick = async () => {
+        const card = document.getElementById('certificate-card');
+        if (!card || !window.html2canvas) return;
+        sfx.click();
+        const canvas = await window.html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        const link = document.createElement('a');
+        link.download = `شهادة-${state.result.student.name.replace(/\s+/g, '_')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      };
+
+      const btnExitPrintExam = document.getElementById('btn-exit-print-exam');
+      if (btnExitPrintExam) btnExitPrintExam.onclick = () => { state.phase = 'onboarding'; state.panelOpen = true; render(); };
+
+      const btnSwStudent = document.getElementById('btn-switch-print-student');
+      const btnSwTeacher = document.getElementById('btn-switch-print-teacher');
+      if (btnSwStudent) btnSwStudent.onclick = () => { state.printExamMode = 'student'; render(); };
+      if (btnSwTeacher) btnSwTeacher.onclick = () => { state.printExamMode = 'teacher'; render(); };
+
+      const btnTrigPrint = document.getElementById('btn-trigger-print-exam');
+      if (btnTrigPrint) btnTrigPrint.onclick = () => { sfx.click(); window.print(); };
+
+      const btnCloseShare = document.getElementById('btn-close-share-modal');
+      const shareBackdrop = document.getElementById('share-modal-backdrop');
+      if (btnCloseShare) btnCloseShare.onclick = () => { state.shareModalQuiz = null; render(); };
+      if (shareBackdrop) shareBackdrop.onclick = () => { state.shareModalQuiz = null; render(); };
+
+      const btnCopyShare = document.getElementById('btn-copy-share-url');
+      if (btnCopyShare) btnCopyShare.onclick = () => {
+        const inp = document.getElementById('inp-share-url');
+        if (inp) {
+          inp.select();
+          navigator.clipboard?.writeText(inp.value);
+          btnCopyShare.textContent = 'تمّ النسخ ✓';
+          setTimeout(() => render(), 1200);
+        }
+      };
+
+      const btnDlQrCard = document.getElementById('btn-download-qr-card');
+      if (btnDlQrCard && state.shareModalQuiz) btnDlQrCard.onclick = async () => {
+        const el = document.getElementById('qr-export-card');
+        if (!el || !window.html2canvas) return;
+        const canvas = await window.html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+        const link = document.createElement('a');
+        const safe = (state.shareModalQuiz.lessonTitle || 'باركود').replace(/[\\/:*?"<>|]+/g, '_');
+        link.download = `باركود-${safe}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      };
+
+      const btnClosePdf = document.getElementById('btn-close-pdf-modal');
+      const pdfBackdrop = document.getElementById('pdf-modal-backdrop');
+      if (btnClosePdf) btnClosePdf.onclick = () => { state.pdfChoiceQuiz = null; render(); };
+      if (pdfBackdrop) pdfBackdrop.onclick = () => { state.pdfChoiceQuiz = null; render(); };
+
+      const btnPdfStudent = document.getElementById('btn-open-pdf-student');
+      const btnPdfTeacher = document.getElementById('btn-open-pdf-teacher');
+      if (btnPdfStudent) btnPdfStudent.onclick = () => {
+        state.printExamQuiz = state.pdfChoiceQuiz;
+        state.printExamMode = 'student';
+        state.pdfChoiceQuiz = null;
+        state.panelOpen = false;
+        state.phase = 'printExam';
+        render();
+      };
+      if (btnPdfTeacher) btnPdfTeacher.onclick = () => {
+        state.printExamQuiz = state.pdfChoiceQuiz;
+        state.printExamMode = 'teacher';
+        state.pdfChoiceQuiz = null;
+        state.panelOpen = false;
+        state.phase = 'printExam';
+        render();
+      };
+
+      const btnOpenPanel = document.getElementById('btn-open-panel');
+      if (btnOpenPanel) btnOpenPanel.onclick = () => {
+        state.panelOpen = true;
+        state.draftSettings = JSON.parse(JSON.stringify(state.settings));
+        state.errorMsg = '';
+        if (state.panelUnlocked && normalizeFirebaseUrl(state.settings.firebaseUrl)) {
+          pullCloudResultsAndUnlisted().then(() => render());
+        }
+        render();
+      };
+
+      const btnClosePanel = document.getElementById('btn-close-panel');
+      const backdrop = document.getElementById('panel-backdrop');
+      if (btnClosePanel) btnClosePanel.onclick = () => { state.panelOpen = false; render(); };
+      if (backdrop) backdrop.onclick = () => { state.panelOpen = false; render(); };
+
+      const inpPwd = document.getElementById('inp-panel-pwd');
+      const btnUnlock = document.getElementById('btn-unlock-panel');
+      if (inpPwd) {
+        inpPwd.oninput = e => { state.pwdInput = e.target.value; state.pwdError = false; };
+        inpPwd.onkeydown = e => { if (e.key === 'Enter' && btnUnlock) btnUnlock.click(); };
+      }
+      if (btnUnlock) btnUnlock.onclick = () => {
+        const expected = (state.settings.panelPassword || '1234').trim();
+        if (state.pwdInput === expected) {
+          state.panelUnlocked = true;
+          state.pwdError = false;
+          state.draftSettings = JSON.parse(JSON.stringify(state.settings));
+          if (normalizeFirebaseUrl(state.settings.firebaseUrl)) {
+            pullCloudResultsAndUnlisted().then(() => render());
+          }
+        } else {
+          state.pwdError = true;
+        }
+        render();
+      };
+
+      const btnCloudSync = document.getElementById('btn-manual-cloud-sync');
+      if (btnCloudSync) btnCloudSync.onclick = async () => {
+        sfx.click();
+        render();
+        await syncAllToFirebase();
+        await pullCloudResultsAndUnlisted();
+        render();
+      };
+
+      document.querySelectorAll('.btn-panel-tab').forEach(b => {
+        b.onclick = () => {
+          sfx.click();
+          state.panelTab = b.getAttribute('data-tab');
+          state.errorMsg = '';
+          if ((state.panelTab === 'results' || state.panelTab === 'students') && normalizeFirebaseUrl(state.settings.firebaseUrl)) {
+            pullCloudResultsAndUnlisted().then(() => render());
+          }
+          render();
+        };
+      });
+
+      const selCSub = document.getElementById('sel-content-subject');
+      if (selCSub) selCSub.onchange = e => { state.contentSubjectChoice = e.target.value; render(); };
+
+      const inpCCustomSub = document.getElementById('inp-content-custom-sub');
+      if (inpCCustomSub) inpCCustomSub.oninput = e => { state.contentCustomSubject = e.target.value; };
+
+      const selCStage = document.getElementById('sel-content-stage');
+      if (selCStage) selCStage.onchange = e => {
+        state.contentStage = e.target.value;
+        const grs = getGradesForStage(tree, state.contentStage);
+        state.contentGrade = grs[0]?.name || '';
+        render();
+      };
+
+      const selCGrade = document.getElementById('sel-content-grade');
+      if (selCGrade) selCGrade.onchange = e => { state.contentGrade = e.target.value; };
+
+      const btnTFile = document.getElementById('btn-t-file');
+      const inpTFile = document.getElementById('inp-t-file');
+      if (btnTFile && inpTFile) {
+        btnTFile.onclick = () => inpTFile.click();
+        inpTFile.onchange = async e => {
+          if (!e.target.files?.length) return;
+          state.errorMsg = '';
+          try {
+            for (const f of Array.from(e.target.files)) {
+              const ing = await ingestFile(f);
+              state.uploadedFiles.push(ing);
+              state.referenceAssets.push({ name: ing.name, kind: ing.kind, dataUrl: ing.dataUrl, text: ing.text });
+            }
+          } catch (err) {
+            state.errorMsg = err.message || 'تعذّر قراءة الملف.';
+          }
+          render();
+        };
+      }
+      const btnTCam = document.getElementById('btn-t-cam');
+      const inpTCam = document.getElementById('inp-t-cam');
+      if (btnTCam && inpTCam) {
+        btnTCam.onclick = () => inpTCam.click();
+        inpTCam.onchange = inpTFile ? inpTFile.onchange : null;
+      }
+
+      document.querySelectorAll('.btn-rm-file').forEach(b => {
+        b.onclick = () => {
+          const idx = Number(b.getAttribute('data-rm-file'));
+          state.uploadedFiles.splice(idx, 1);
+          state.referenceAssets.splice(idx, 1);
+          render();
+        };
+      });
+
+      const btnGen = document.getElementById('btn-generate-quiz');
+      if (btnGen) btnGen.onclick = async () => {
+        state.errorMsg = '';
+        state.busy = true;
+        state.statusMsg = 'جارٍ تحليل المادّة والدرس وتجهيز الأسئلة...';
+        render();
+        try {
+          const activeSettings = state.draftSettings || state.settings;
+          const chosenSub = state.contentSubjectChoice === SUBJECT_OPTIONS[SUBJECT_OPTIONS.length - 1]
+            ? state.contentCustomSubject.trim()
+            : state.contentSubjectChoice;
+
+          const generated = await generateQuizFromFiles(
+            state.uploadedFiles,
+            activeSettings.geminiApiKey,
+            activeSettings.questionsPerLevel,
+            activeSettings.geminiModel,
+            { subject: chosenSub, stage: state.contentStage, grade: state.contentGrade },
+            msg => { state.statusMsg = msg; render(); }
+          );
+
+          state.quizBank.unshift(generated);
+          saveQuizBank(state.quizBank);
+          state.previewQuizId = generated.id;
+          state.selectedQuizId = generated.id;
+          state.panelTab = 'bank';
+          sfx.click();
+
+          if (normalizeFirebaseUrl(activeSettings.firebaseUrl)) {
+            syncAllToFirebase();
+          }
+        } catch (err) {
+          state.errorMsg = err.message || 'حدث خطأ أثناء التوليد.';
+        } finally {
+          state.busy = false;
+          state.statusMsg = '';
+          render();
+        }
+      };
+
+      document.querySelectorAll('.btn-toggle-avail').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-toggle-avail');
+          state.quizBank = state.quizBank.map(q => q.id === id ? { ...q, isAvailable: q.isAvailable === false ? true : false } : q);
+          saveQuizBank(state.quizBank);
+          if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+          sfx.click();
+          render();
+        };
+      });
+
+      document.querySelectorAll('.btn-select-preview').forEach(b => {
+        b.onclick = () => {
+          state.previewQuizId = b.getAttribute('data-select-preview');
+          state.editingQId = null;
+          render();
+        };
+      });
+
+      document.querySelectorAll('.btn-open-share').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-open-share');
+          state.shareModalQuiz = state.quizBank.find(q => q.id === id) || null;
+          sfx.click();
+          render();
+        };
+      });
+
+      document.querySelectorAll('.btn-open-pdf').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-open-pdf');
+          state.pdfChoiceQuiz = state.quizBank.find(q => q.id === id) || null;
+          sfx.click();
+          render();
+        };
+      });
+
+      document.querySelectorAll('.btn-export-html').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-export-html');
+          const qz = state.quizBank.find(q => q.id === id);
+          if (qz) { sfx.click(); exportStandaloneStudentHTML(qz); }
+        };
+      });
+
+      document.querySelectorAll('.btn-export-json-id').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-export-json-id');
+          const qz = state.quizBank.find(q => q.id === id);
+          if (!qz) return;
+          const safe = (qz.lessonTitle || 'الدرس').replace(/[\\/:*?"<>|]+/g, '_');
+          const blob = new Blob([JSON.stringify(qz, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `quiz-${safe}.json`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        };
+      });
+
+      document.querySelectorAll('.btn-del-quiz').forEach(b => {
+        b.onclick = () => {
+          const id = b.getAttribute('data-del-quiz');
+          state.quizBank = state.quizBank.filter(q => q.id !== id);
+          saveQuizBank(state.quizBank);
+          if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+          render();
+        };
+      });
+
+      const btnImport = document.getElementById('btn-import-json');
+      const inpImport = document.getElementById('inp-import-json');
+      if (btnImport && inpImport) {
+        btnImport.onclick = () => inpImport.click();
+        inpImport.onchange = e => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const parsed = JSON.parse(reader.result);
+              if (!Array.isArray(parsed.questions)) throw new Error();
+              parsed.id = parsed.id || 'quiz-' + Date.now().toString(36);
+              if (parsed.isAvailable === undefined) parsed.isAvailable = true;
+              state.quizBank.unshift(parsed);
+              saveQuizBank(state.quizBank);
+              state.previewQuizId = parsed.id;
+              if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+            } catch {
+              alert('ملف JSON المستورد غير صالح.');
+            }
+            render();
+          };
+          reader.readAsText(file, 'utf-8');
+        };
+      }
+
+      const activePreviewQuiz = state.quizBank.find(q => q.id === state.previewQuizId) || state.quizBank[0] || null;
+      if (activePreviewQuiz) {
+        document.querySelectorAll('.btn-edit-q').forEach(b => {
+          b.onclick = () => {
+            const id = b.getAttribute('data-edit-q');
+            const q = activePreviewQuiz.questions.find(item => item.id === id);
+            if (!q) return;
+            state.editingQId = id;
+            state.editQText = q.text;
+            state.editQCorrect = q.correctIndex;
+            render();
+          };
+        });
+
+        const txtEditQ = document.getElementById('txt-edit-q');
+        if (txtEditQ) txtEditQ.oninput = e => { state.editQText = e.target.value; };
+
+        const selEditC = document.getElementById('sel-edit-correct');
+        if (selEditC) selEditC.onchange = e => { state.editQCorrect = Number(e.target.value); };
+
+        document.querySelectorAll('.btn-commit-q').forEach(b => {
+          b.onclick = () => {
+            const id = b.getAttribute('data-commit-q');
+            activePreviewQuiz.questions = activePreviewQuiz.questions.map(q =>
+              q.id === id ? { ...q, text: state.editQText.trim() || q.text, correctIndex: state.editQCorrect } : q
+            );
+            saveQuizBank(state.quizBank);
+            if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+            state.editingQId = null;
+            render();
+          };
+        });
+
+        document.querySelectorAll('.btn-del-q').forEach(b => {
+          b.onclick = () => {
+            const id = b.getAttribute('data-del-q');
+            activePreviewQuiz.questions = activePreviewQuiz.questions.filter(q => q.id !== id);
+            saveQuizBank(state.quizBank);
+            if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+            render();
+          };
+        });
+      }
+
+      const selRStage = document.getElementById('sel-roster-stage');
+      if (selRStage) selRStage.onchange = e => {
+        state.rosterStage = e.target.value;
+        const grs = getGradesForStage(tree, state.rosterStage);
+        state.rosterGrade = grs[0]?.name || '';
+        state.rosterSection = grs[0]?.sections?.[0] || '';
+        render();
+      };
+
+      const selRGrade = document.getElementById('sel-roster-grade');
+      if (selRGrade) selRGrade.onchange = e => {
+        state.rosterGrade = e.target.value;
+        const secs = getSectionsForGrade(tree, state.rosterStage, state.rosterGrade);
+        state.rosterSection = secs[0] || '';
+        render();
+      };
+
+      const selRSection = document.getElementById('sel-roster-section');
+      if (selRSection) selRSection.onchange = e => { state.rosterSection = e.target.value; render(); };
+
+      const btnDlExcelTpl = document.getElementById('btn-dl-excel-tpl');
+      if (btnDlExcelTpl) btnDlExcelTpl.onclick = () => downloadSampleExcelTemplate();
+
+      const btnImportExcel = document.getElementById('btn-import-excel-roster');
+      const inpExcelRoster = document.getElementById('inp-excel-roster');
+      if (btnImportExcel && inpExcelRoster) {
+        btnImportExcel.onclick = () => inpExcelRoster.click();
+        inpExcelRoster.onchange = async e => {
+          const f = e.target.files?.[0];
+          if (!f) return;
+          try {
+            const names = await parseExcelStudentNames(f);
+            if (names.length === 0) {
+              alert('لم يتم العثور على أسماء صالحة داخل ملف Excel.');
+              return;
+            }
+            const k = rosterKey(state.rosterStage, state.rosterGrade, state.rosterSection);
+            const existing = state.roster[k] || [];
+            state.roster[k] = Array.from(new Set([...existing, ...names]));
+            saveRoster(state.roster);
+            if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+            sfx.click();
+            render();
+          } catch (err) {
+            alert(err.message || 'تعذّر قراءة ملف Excel.');
+          }
+        };
+      }
+
+      const txtBatch = document.getElementById('txt-batch-names');
+      if (txtBatch) txtBatch.oninput = e => { state.batchNamesText = e.target.value; };
+
+      const btnAddBatch = document.getElementById('btn-add-batch-names');
+      if (btnAddBatch) btnAddBatch.onclick = () => {
+        const lines = state.batchNamesText.split(/\r?\n/).map(s => s.trim()).filter(s => s.length >= 2);
+        if (!lines.length) return;
+        const k = rosterKey(state.rosterStage, state.rosterGrade, state.rosterSection);
+        const existing = state.roster[k] || [];
+        state.roster[k] = Array.from(new Set([...existing, ...lines]));
+        state.batchNamesText = '';
+        saveRoster(state.roster);
+        if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+        sfx.click();
+        render();
+      };
+
+      document.querySelectorAll('.btn-rm-student').forEach(b => {
+        b.onclick = () => {
+          const idx = Number(b.getAttribute('data-rm-student'));
+          const k = rosterKey(state.rosterStage, state.rosterGrade, state.rosterSection);
+          if (Array.isArray(state.roster[k])) {
+            state.roster[k].splice(idx, 1);
+            saveRoster(state.roster);
+            if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+            render();
+          }
+        };
+      });
+
+      const btnClearClassRoster = document.getElementById('btn-clear-class-roster');
+      if (btnClearClassRoster) btnClearClassRoster.onclick = () => {
+        const k = rosterKey(state.rosterStage, state.rosterGrade, state.rosterSection);
+        delete state.roster[k];
+        saveRoster(state.roster);
+        if (normalizeFirebaseUrl(state.settings.firebaseUrl)) syncAllToFirebase();
+        render();
+      };
+
+      document.querySelectorAll('.btn-start-resolve').forEach(b => {
+        b.onclick = () => {
+          const id = Number(b.getAttribute('data-start-resolve'));
+          const item = state.unlistedStudents.find(u => u.id === id);
+          if (!item) return;
+          state.resolvingUnlistedId = id;
+          state.resolveEditName = item.typedName;
+          state.resolveStage = item.stage;
+          state.resolveGrade = item.grade;
+          state.resolveSection = item.section;
+          render();
+        };
+      });
+
+      const inpResName = document.getElementById('inp-resolve-name');
+      if (inpResName) inpResName.oninput = e => { state.resolveEditName = e.target.value; };
+
+      const selResStage = document.getElementById('sel-resolve-stage');
+      if (selResStage) selResStage.onchange = e => {
+        state.resolveStage = e.target.value;
+        const grs = getGradesForStage(tree, state.resolveStage);
+        state.resolveGrade = grs[0]?.name || '';
+        state.resolveSection = grs[0]?.sections?.[0] || '';
+        render();
+      };
+      const selResGrade = document.getElementById('sel-resolve-grade');
+      if (selResGrade) selResGrade.onchange = e => {
+        state.resolveGrade = e.target.value;
+        const secs = getSectionsForGrade(tree, state.resolveStage, state.resolveGrade);
+        state.resolveSection = secs[0] || '';
+        render();
+      };
+      const selResSec = document.getElementById('sel-resolve-section');
+      if (selResSec) selResSec.onchange = e => { state.resolveSection = e.target.value; };
+
+      const btnCancelRes = document.getElementById('btn-cancel-resolve');
+      if (btnCancelRes) btnCancelRes.onclick = () => { state.resolvingUnlistedId = null; render(); };
+
+      document.querySelectorAll('.btn-confirm-resolve').forEach(b => {
+        b.onclick = () => {
+          const id = Number(b.getAttribute('data-confirm-resolve'));
+          const item = state.unlistedStudents.find(u => u.id === id);
+          const approvedName = state.resolveEditName.trim();
+          if (!item || !approvedName) return;
+
+          const k = rosterKey(state.resolveStage, state.resolveGrade, state.resolveSection);
+          const existing = state.roster[k] || [];
+          state.roster[k] = Array.from(new Set([...existing, approvedName]));
+          saveRoster(state.roster);
+
+          const logs = loadResultsLog().map(r => {
+            if (r.studentName === item.typedName && r.grade === item.grade && r.section === item.section) {
+              return { ...r, studentName: approvedName, stage: state.resolveStage, grade: state.resolveGrade, section: state.resolveSection, wasUnlisted: false };
+            }
+            return r;
+          });
+          localStorage.setItem(RESULTS_KEY, JSON.stringify(logs));
+
+          state.unlistedStudents = state.unlistedStudents.filter(u => u.id !== id);
+          saveUnlisted(state.unlistedStudents);
+          state.resolvingUnlistedId = null;
+
+          const fbBase = normalizeFirebaseUrl(state.settings.firebaseUrl);
+          if (fbBase) {
+            if (item.fbKey) fbRequest(fbBase, `unlistedStudents/${item.fbKey}`, 'DELETE').catch(() => {});
+            syncAllToFirebase();
+          }
+
+          sfx.click();
+          render();
+        };
+      });
+
+      document.querySelectorAll('.btn-dismiss-unlisted').forEach(b => {
+        b.onclick = () => {
+          const id = Number(b.getAttribute('data-dismiss-unlisted'));
+          const item = state.unlistedStudents.find(u => u.id === id);
+          state.unlistedStudents = state.unlistedStudents.filter(u => u.id !== id);
+          saveUnlisted(state.unlistedStudents);
+          const fbBase = normalizeFirebaseUrl(state.settings.firebaseUrl);
+          if (fbBase && item?.fbKey) fbRequest(fbBase, `unlistedStudents/${item.fbKey}`, 'DELETE').catch(() => {});
+          render();
+        };
+      });
+
+      const btnExportCsv = document.getElementById('btn-export-csv');
+      if (btnExportCsv) btnExportCsv.onclick = () => { sfx.click(); exportResultsCSV(); };
+
+      const btnClearResults = document.getElementById('btn-clear-results');
+      if (btnClearResults) btnClearResults.onclick = () => { clearResultsLog(); render(); };
+
+      const d = state.draftSettings;
+      if (d) {
+        const bindVal = (id, key) => { const el = document.getElementById(id); if (el) el.oninput = e => { d[key] = e.target.value; }; };
+        bindVal('inp-firebase-url', 'firebaseUrl');
+        bindVal('inp-api-key', 'geminiApiKey');
+        bindVal('inp-inst-header', 'institutionHeader');
+        bindVal('inp-welcome-banner', 'welcomeBanner');
+        bindVal('inp-r1-title', 'role1Title');
+        bindVal('inp-r1-name', 'role1Name');
+        bindVal('inp-r2-title', 'role2Title');
+        bindVal('inp-r2-name', 'role2Name');
+        bindVal('inp-r3-title', 'role3Title');
+        bindVal('inp-r3-name', 'role3Name');
+        bindVal('inp-footer-text', 'footerText');
+        bindVal('inp-new-pwd', 'panelPassword');
+
+        const btnToggleKey = document.getElementById('btn-toggle-key');
+        if (btnToggleKey) btnToggleKey.onclick = () => { state.showKey = !state.showKey; render(); };
+
+        const selModel = document.getElementById('sel-gemini-model');
+        if (selModel) selModel.onchange = e => { d.geminiModel = e.target.value; };
+
+        const selFont = document.getElementById('sel-reading-font');
+        if (selFont) selFont.onchange = e => { d.readingFont = e.target.value; };
+
+        const qRange = document.getElementById('inp-q-per-lvl');
+        if (qRange) qRange.oninput = e => { d.questionsPerLevel = Number(e.target.value); render(); };
+
+        const btnDirect = document.getElementById('btn-toggle-direct');
+        if (btnDirect) btnDirect.onclick = () => { d.directUploadMode = !d.directUploadMode; render(); };
+
+        const btnSchoolLogo = document.getElementById('btn-up-school-logo');
+        const inpSchoolLogo = document.getElementById('inp-school-logo');
+        if (btnSchoolLogo && inpSchoolLogo) {
+          btnSchoolLogo.onclick = () => inpSchoolLogo.click();
+          inpSchoolLogo.onchange = async e => {
+            if (e.target.files?.[0]) {
+              const { dataUrl } = await fileToBase64(e.target.files[0]);
+              d.schoolLogo = dataUrl;
+              render();
+            }
+          };
+        }
+        const rmSchoolLogo = document.getElementById('btn-rm-school-logo');
+        if (rmSchoolLogo) rmSchoolLogo.onclick = () => { d.schoolLogo = null; render(); };
+
+        const btnTeacherLogo = document.getElementById('btn-up-teacher-logo');
+        const inpTeacherLogo = document.getElementById('inp-teacher-logo');
+        if (btnTeacherLogo && inpTeacherLogo) {
+          btnTeacherLogo.onclick = () => inpTeacherLogo.click();
+          inpTeacherLogo.onchange = async e => {
+            if (e.target.files?.[0]) {
+              const { dataUrl } = await fileToBase64(e.target.files[0]);
+              d.teacherLogo = dataUrl;
+              render();
+            }
+          };
+        }
+        const rmTeacherLogo = document.getElementById('btn-rm-teacher-logo');
+        if (rmTeacherLogo) rmTeacherLogo.onclick = () => { d.teacherLogo = null; render(); };
+
+        const inpNewStage = document.getElementById('inp-new-stage');
+        if (inpNewStage) inpNewStage.oninput = e => { state.newStageName = e.target.value; };
+
+        const btnAddStage = document.getElementById('btn-add-stage');
+        if (btnAddStage) btnAddStage.onclick = () => {
+          const nm = state.newStageName.trim();
+          if (!nm) return;
+          d.academicTree.push({ id: 'stg-' + Date.now(), name: nm, grades: [] });
+          state.newStageName = '';
+          render();
+        };
+
+        document.querySelectorAll('.btn-del-stage').forEach(b => {
+          b.onclick = () => {
+            const idx = Number(b.getAttribute('data-del-stage'));
+            d.academicTree.splice(idx, 1);
+            render();
+          };
+        });
+
+        document.querySelectorAll('.btn-add-grade').forEach(b => {
+          b.onclick = () => {
+            const sIdx = Number(b.getAttribute('data-add-grade'));
+            const inp = document.querySelector(`.inp-inline-grade[data-grade-inp="${sIdx}"]`);
+            const nm = inp?.value.trim();
+            if (!nm) return;
+            d.academicTree[sIdx].grades.push({ id: 'grd-' + Date.now(), name: nm, sections: ['أ', 'ب'] });
+            render();
+          };
+        });
+
+        document.querySelectorAll('.btn-del-grade').forEach(b => {
+          b.onclick = () => {
+            const [sIdx, gIdx] = b.getAttribute('data-del-grade').split(':').map(Number);
+            d.academicTree[sIdx].grades.splice(gIdx, 1);
+            render();
+          };
+        });
+
+        document.querySelectorAll('.btn-add-sec').forEach(b => {
+          b.onclick = () => {
+            const [sIdx, gIdx] = b.getAttribute('data-add-sec').split(':').map(Number);
+            const inp = document.querySelector(`.inp-inline-sec[data-sec-inp="${sIdx}:${gIdx}"]`);
+            const nm = inp?.value.trim();
+            if (!nm) return;
+            const secs = d.academicTree[sIdx].grades[gIdx].sections;
+            if (!secs.includes(nm)) secs.push(nm);
+            render();
+          };
+        });
+
+        document.querySelectorAll('.btn-del-sec').forEach(b => {
+          b.onclick = () => {
+            const [sIdx, gIdx, secIdx] = b.getAttribute('data-del-sec').split(':').map(Number);
+            d.academicTree[sIdx].grades[gIdx].sections.splice(secIdx, 1);
+            render();
+          };
+        });
+      }
+
+      const btnSaveSettings = document.getElementById('btn-save-settings');
+      if (btnSaveSettings) btnSaveSettings.onclick = async () => {
+        state.settings = JSON.parse(JSON.stringify(state.draftSettings));
+        saveSettings(state.settings);
+
+        const t = state.settings.academicTree;
+        if (t.length > 0 && !t.some(s => s.name === state.student.stage)) {
+          state.student.stage = t[0].name;
+          state.student.grade = t[0].grades?.[0]?.name || '';
+          state.student.section = t[0].grades?.[0]?.sections?.[0] || '';
+        }
+
+        if (normalizeFirebaseUrl(state.settings.firebaseUrl)) {
+          await syncAllToFirebase();
+        }
+
+        state.savedToast = true;
+        sfx.click();
+        render();
+        setTimeout(() => { state.savedToast = false; render(); }, 1800);
+      };
+    }
+
+    // ===================== 13. INITIAL BOOT =====================
+    (async function bootApp() {
+      const params = new URLSearchParams(window.location.search);
+      const targetQuizId = params.get('quiz');
+      if (targetQuizId) {
+        const localMatch = state.quizBank.find(q => q.id === targetQuizId);
+        if (localMatch) {
+          state.selectedQuizId = localMatch.id;
+          if (localMatch.stage) state.student.stage = localMatch.stage;
+          if (localMatch.grade) state.student.grade = localMatch.grade;
+        }
+      }
+      render();
+      await pullCloudDataForStudent(targetQuizId);
+      render();
+    })();
+  </script>
+</body>
+</html>
