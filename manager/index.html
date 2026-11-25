@@ -41,7 +41,7 @@
       flex-direction: column;
     }
 
-    /* شاشة الحماية بالرقم السري */
+    /* شاشة الحماية العامّة */
     #lockScreen {
       position: fixed;
       inset: 0;
@@ -87,6 +87,81 @@
       margin: 0 0 18px;
       color: var(--muted);
       font-size: 14px;
+    }
+
+    /* بطاقة قفل تبويب الاستضافة والحماية */
+    .tab-lock-card {
+      background: var(--card);
+      border: 2px solid #bae6fd;
+      border-radius: 16px;
+      max-width: 440px;
+      margin: 24px auto;
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .tab-lock-badge {
+      width: 62px;
+      height: 62px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: #fef3c7;
+      color: #b45309;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .tab-lock-card h3 {
+      margin: 0 0 8px;
+      color: var(--primary-dark);
+      font-size: 19px;
+    }
+
+    .tab-lock-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .tab-security-bar {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: #065f46;
+      font-weight: 600;
+    }
+
+    .token-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .token-input-wrap input {
+      padding-left: 42px;
+    }
+
+    .token-eye-btn {
+      position: absolute;
+      left: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--muted);
+      padding: 4px;
     }
 
     /* الترويسة */
@@ -545,7 +620,7 @@
 </head>
 <body>
 
-  <!-- شاشة الحماية بالرقم السري -->
+  <!-- شاشة الحماية العامّة -->
   <div id="lockScreen">
     <div class="lock-card">
       <div class="lock-badge">🔐</div>
@@ -574,10 +649,10 @@
 
   <nav class="tabs">
     <button class="tab-btn" id="tabBtn-injector" onclick="switchTab('injector', this)">🔗 ربط ونشر لعبة أو منصّة</button>
-    <button class="tab-btn" id="tabBtn-report" onclick="switchTab('report', this)">📊 التقرير الشامل والباركود (<span id="projCount">0</span>)</button>
+    <button class="tab-btn" id="tabBtn-report" onclick="switchTab('report', this)">📊 التقرير الشامل والباركود (<span id="projCount">1</span>)</button>
     <button class="tab-btn" id="tabBtn-generator" onclick="switchTab('generator', this)">⚡ توليد قالب جديد</button>
     <button class="tab-btn" id="tabBtn-shared" onclick="switchTab('shared', this)">🏫 البيانات المشتركة والشهادات</button>
-    <button class="tab-btn active" id="tabBtn-settings" onclick="switchTab('settings', this)">⚙️ الاستضافة والحماية</button>
+    <button class="tab-btn active" id="tabBtn-settings" onclick="switchTab('settings', this)">⚙️ الاستضافة والحماية 🔒</button>
   </nav>
 
   <main>
@@ -651,15 +726,15 @@
 
         <div class="stats-row">
           <div class="stat-card">
-            <div class="num" id="statTotal">0</div>
+            <div class="num" id="statTotal">1</div>
             <div class="lbl">إجماليّ الألعاب والمنصّات المربوطة</div>
           </div>
           <div class="stat-card">
-            <div class="num" id="statPublished" style="color:var(--accent);">0</div>
+            <div class="num" id="statPublished" style="color:var(--accent);">1</div>
             <div class="lbl">منشورة برابطٍ مباشرٍ للطلّاب</div>
           </div>
           <div class="stat-card">
-            <div class="num" id="statProtected" style="color:var(--success);">0</div>
+            <div class="num" id="statProtected" style="color:var(--success);">1</div>
             <div class="lbl">محميّة ببصمة منع التكرار</div>
           </div>
         </div>
@@ -681,7 +756,36 @@
                 <th>إدارة</th>
               </tr>
             </thead>
-            <tbody id="reportTableBody"><tr><td colspan="7" style="text-align:center; color:var(--danger);">تعذّر جلب التقرير من السحابة. تحقّق من قواعد القراءة في Firebase.</td></tr></tbody>
+            <tbody id="reportTableBody">
+          <tr>
+            <td><strong>1</strong></td>
+            <td>
+              <strong style="color:var(--primary-dark); font-size:14px;">منصّة التعلّم الذكي</strong>
+              <div style="margin-top:4px;">
+                <span class="badge-tag smart">منشور للطلّاب ✓</span>
+              </div>
+            </td>
+            <td>منصّة تعلّم ذكيّ</td>
+            <td>
+              <div><span class="code-pill">apps/mnsh_altalm_aldhky</span></div>
+              <div style="font-size:11px; color:var(--muted); margin-top:3px;">البصمة: a48bc076f3</div>
+            </td>
+            <td>٢٥‏/١١‏/٢٠٢٦</td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <button class="btn btn-primary btn-sm" onclick="copyStudentLink('mnsh_altalm_aldhky')">📋 نسخ الرابط</button>
+                <button class="btn btn-accent btn-sm" onclick="openProjectQr('mnsh_altalm_aldhky')">📱 باركود باسم اللعبة</button>
+                <button class="btn btn-outline btn-sm" onclick="editProjectUrl('mnsh_altalm_aldhky')">✏️ تعديل الرابط</button>
+              </div>
+            </td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <button class="btn btn-outline btn-sm" onclick="backupProject('mnsh_altalm_aldhky')" title="نسخة احتياطيّة للبيانات">📦</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteProject('mnsh_altalm_aldhky')" title="حذف المشروع">🗑</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
           </table>
         </div>
       </div>
@@ -744,54 +848,95 @@
       </div>
     </section>
 
-    <!-- التبويب الخامس: الاستضافة والحماية -->
+    <!-- التبويب الخامس: الاستضافة والحماية (محميّ بقفلٍ مستقلٍّ) -->
     <section id="tab-settings" class="panel active">
-      <div class="card">
-        <h2>🚀 إعداد النشر التلقائيّ على استضافة Cloudflare Pages (يُضبط مرّةً واحدةً فقط)</h2>
-        <p style="font-size:13px; color:var(--muted); line-height:1.8; margin-top:0;">
-          عند ربط مستودع GitHub بمشروعك في <strong>Cloudflare Pages</strong> وإدخال البيانات أدناه مرّةً واحدةً، سيقوم النظام تلقائيًّا برفع كلّ لعبةٍ تربطها ونشرها على الإنترنت واستخراج رابطها والباركود بضغطة زرٍّ دون دخولك إلى موقع الاستضافة نهائيًّا:
-        </p>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>رابط مشروعك الأساسيّ في Cloudflare Pages:</label>
-            <input type="text" id="cfBaseUrl" placeholder="https://emad-games.pages.dev" style="direction:ltr; text-align:left;">
-          </div>
-          <div class="form-group">
-            <label>اسم حسابك في GitHub (<span dir="ltr">Username</span>):</label>
-            <input type="text" id="ghOwner" placeholder="مثال: emad-103" style="direction:ltr; text-align:left;">
-          </div>
-          <div class="form-group">
-            <label>اسم المستودع المربوط بالاستضافة (<span dir="ltr">Repository</span>):</label>
-            <input type="text" id="ghRepo" placeholder="مثال: emad-games" style="direction:ltr; text-align:left;">
-          </div>
-          <div class="form-group">
-            <label>رمز الوصول الشخصيّ (<span dir="ltr">GitHub Token</span> - يُحفظ محلّيًّا بأمان):</label>
-            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="direction:ltr; text-align:left;">
-          </div>
+      <!-- بوابة قفل التبويب -->
+      <div id="hostingLockGate" class="tab-lock-card">
+        <div class="tab-lock-badge">🛡️</div>
+        <h3>منطقة محميّة — إعدادات الاستضافة والربط</h3>
+        <p>هذا التبويب محميٌّ بكلمة سرٍّ مستقلّةٍ لحماية رموز الاستضافة وبيانات الربط. أدخل كلمة سرّ التبويب للمتابعة (الافتراضيّة: <strong>2026</strong>):</p>
+        <div class="form-group">
+          <input type="password" id="hostingTabPinInput" placeholder="أدخل كلمة سرّ التبويب..." style="text-align:center; font-size:17px; letter-spacing:3px;">
         </div>
-        <div style="display:flex; flex-wrap:wrap; gap:10px;">
-          <button class="btn btn-accent" onclick="saveHostingConfig()">💾 حفظ إعدادات الاستضافة والنشر التلقائيّ</button>
-          <button class="btn btn-outline" id="btnDeploySelf" onclick="deploySelfToCloudflare()" disabled="">⏳ جارٍ نشر الأداة على الاستضافة...</button>
-        </div>
-        <div id="selfLiveUrlBox" style="display:none; margin-top:14px; padding:12px; background:#f0fdfa; border:1px solid #99f6e4; border-radius:10px; font-size:13px;">
-          <strong>رابط الأداة المباشر على استضافتك:</strong>
-          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px;">
-            <span class="code-pill" id="selfLiveUrlText"></span>
-            <button class="btn btn-primary btn-sm" onclick="copySelfUrl()">📋 نسخ رابط الأداة</button>
-          </div>
-        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="unlockHostingTab()">🔓 فتح تبويب الاستضافة والحماية</button>
       </div>
 
-      <div class="card">
-        <h2>🔐 تغيير الرقم السرّيّ للوحة التحكّم والصوت</h2>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>الرقم السرّيّ الجديد:</label>
-            <input type="password" id="newPinInput" placeholder="أدخل الرقم السرّيّ الجديد">
+      <!-- محتوى التبويب بعد فتح القفل -->
+      <div id="hostingUnlockedContent" style="display:none;">
+        <div class="tab-security-bar">
+          <span>🔓 تبويب «الاستضافة والحماية» مفتوحٌ حاليًّا (يُقفل تلقائيًّا عند مغادرته)</span>
+          <button class="btn btn-warning btn-sm" onclick="lockHostingTab()">🔒 قفل التبويب الآن</button>
+        </div>
+
+        <div class="card">
+          <h2>🚀 إعداد النشر التلقائيّ على استضافة Cloudflare Pages</h2>
+          <p style="font-size:13px; color:var(--muted); line-height:1.8; margin-top:0;">
+            عند ربط مستودع GitHub بمشروعك في <strong>Cloudflare Pages</strong> وإدخال البيانات أدناه، سيقوم النظام تلقائيًّا برفع كلّ لعبةٍ تربطها ونشرها على الإنترنت واستخراج رابطها والباركود بضغطة زرٍّ:
+          </p>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>رابط مشروعك الأساسيّ في Cloudflare Pages:</label>
+              <input type="text" id="cfBaseUrl" placeholder="https://emad-games.pages.dev" style="direction:ltr; text-align:left;">
+            </div>
+            <div class="form-group">
+              <label>اسم حسابك في GitHub (<span dir="ltr">Username</span>):</label>
+              <input type="text" id="ghOwner" placeholder="مثال: emad-103" style="direction:ltr; text-align:left;">
+            </div>
+            <div class="form-group">
+              <label>اسم المستودع المربوط بالاستضافة (<span dir="ltr">Repository</span>):</label>
+              <input type="text" id="ghRepo" placeholder="مثال: emad-games" style="direction:ltr; text-align:left;">
+            </div>
+            <div class="form-group">
+              <label>رمز الوصول الشخصيّ (<span dir="ltr">GitHub Token</span> - يُحفظ محلّيًّا بأمان):</label>
+              <div class="token-input-wrap">
+                <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="direction:ltr; text-align:left;">
+                <button type="button" class="token-eye-btn" onclick="toggleTokenVisibility()" title="إظهار أو إخفاء الرمز">👁️</button>
+              </div>
+            </div>
           </div>
-          <div class="form-group" style="display:flex; align-items:flex-end; gap:10px;">
-            <button class="btn btn-primary" onclick="changePin()">تحديث الرقم السرّيّ</button>
-            <button class="btn btn-outline" id="soundToggleBtn" onclick="toggleSound()">🔊 الصوت: مفعّل</button>
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <button class="btn btn-accent" onclick="saveHostingConfig()">💾 حفظ إعدادات الاستضافة والنشر التلقائيّ</button>
+            <button class="btn btn-outline" id="btnDeploySelf" onclick="deploySelfToCloudflare()" disabled="">⏳ جارٍ نشر الأداة على الاستضافة...</button>
+          </div>
+          <div id="selfLiveUrlBox" style="display:none; margin-top:14px; padding:12px; background:#f0fdfa; border:1px solid #99f6e4; border-radius:10px; font-size:13px;">
+            <strong>رابط الأداة المباشر على استضافتك:</strong>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px;">
+              <span class="code-pill" id="selfLiveUrlText"></span>
+              <button class="btn btn-primary btn-sm" onclick="copySelfUrl()">📋 نسخ رابط الأداة</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🛡️ تغيير كلمة سرّ تبويب «الاستضافة والحماية»</h2>
+          <p style="font-size:13px; color:var(--muted); margin-top:0;">
+            تُحفظ كلمة سرّ هذا التبويب بصيغةٍ مشفّرةٍ في قاعدة البيانات السحابيّة لتعمل على جميع أجهزتك:
+          </p>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>كلمة السرّ الجديدة للتبويب (4 خاناتٍ على الأقلّ):</label>
+              <input type="password" id="newHostingPinInput" placeholder="أدخل كلمة السرّ الجديدة للتبويب">
+            </div>
+            <div class="form-group">
+              <label>تأكيد كلمة السرّ الجديدة:</label>
+              <input type="password" id="confirmHostingPinInput" placeholder="أعد كتابة كلمة السرّ الجديدة">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="changeHostingTabPin()">🔐 اعتماد وحفظ كلمة سرّ التبويب الجديدة</button>
+        </div>
+
+        <div class="card">
+          <h2>🔐 الرقم السرّيّ العامّ للأداة والمؤثّرات الصوتيّة</h2>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>الرقم السرّيّ العامّ لفتح الأداة:</label>
+              <input type="password" id="newPinInput" placeholder="أدخل الرقم السرّيّ العامّ الجديد">
+            </div>
+            <div class="form-group" style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="changePin()">تحديث الرقم السرّيّ العامّ</button>
+              <button class="btn btn-outline" id="soundToggleBtn" onclick="toggleSound()">🔊 الصوت: مفعّل</button>
+              <button class="btn btn-sm btn-accent" onclick="playTone('success')">تجربة الصوت</button>
+            </div>
           </div>
         </div>
       </div>
@@ -838,6 +983,8 @@
 
     let soundEnabled = localStorage.getItem("emad_sound") !== "off";
     let currentPin = localStorage.getItem("emad_admin_pin") || "2026";
+    let hostingPinHash = localStorage.getItem("emad_hosting_pin_hash") || "";
+    let hostingUnlocked = false;
     let cachedApps = {};
     let uploadedRawHtml = "";
     let uploadedOriginalName = "";
@@ -860,6 +1007,21 @@
         e.preventDefault();
       }
     });
+
+    async function sha256Hex(str) {
+      const text = String(str || "");
+      if (window.crypto && window.crypto.subtle) {
+        const buf = new TextEncoder().encode(text);
+        const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+        return Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+      let h = 2166136261;
+      for (let i = 0; i < text.length; i++) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return ("00000000" + (h >>> 0).toString(16)).slice(-8);
+    }
 
     async function fbRest(path, method = "GET", data = null) {
       const opts = { method, headers: { "Content-Type": "application/json" } };
@@ -911,10 +1073,14 @@
       const dot = document.getElementById("connDot");
       const txt = document.getElementById("connText");
       try {
-        const pinVal = await fbRest("shared_data/admin_config/pin");
-        if (pinVal) {
-          currentPin = String(pinVal);
+        const adminCfg = await fbRest("shared_data/admin_config");
+        if (adminCfg && adminCfg.pin) {
+          currentPin = String(adminCfg.pin);
           localStorage.setItem("emad_admin_pin", currentPin);
+        }
+        if (adminCfg && adminCfg.hosting_pin_hash) {
+          hostingPinHash = String(adminCfg.hosting_pin_hash);
+          localStorage.setItem("emad_hosting_pin_hash", hostingPinHash);
         }
         dot.classList.add("online");
         txt.textContent = "متّصل بالسحابة بنجاح";
@@ -946,11 +1112,92 @@
 
     function lockNow() {
       playTone("click");
+      lockHostingTab(true);
       document.getElementById("lockScreen").style.display = "flex";
+    }
+
+    // قفل وفتح تبويب الاستضافة والحماية
+    async function unlockHostingTab() {
+      const entered = document.getElementById("hostingTabPinInput").value.trim();
+      if (!entered) {
+        playTone("error");
+        showToast("يرجى إدخال كلمة سرّ التبويب أولًا.");
+        return;
+      }
+      const enteredHash = await sha256Hex(entered);
+      const expectedHash = hostingPinHash || await sha256Hex("2026");
+
+      if (enteredHash === expectedHash) {
+        hostingUnlocked = true;
+        document.getElementById("hostingTabPinInput").value = "";
+        document.getElementById("hostingLockGate").style.display = "none";
+        document.getElementById("hostingUnlockedContent").style.display = "block";
+        playTone("success");
+        showToast("تمّ فتح تبويب الاستضافة والحماية بنجاح.");
+      } else {
+        playTone("error");
+        showToast("كلمة سرّ التبويب غير صحيحة.");
+      }
+    }
+
+    document.getElementById("hostingTabPinInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") unlockHostingTab();
+    });
+
+    function lockHostingTab(silent = false) {
+      hostingUnlocked = false;
+      const pinField = document.getElementById("hostingTabPinInput");
+      if (pinField) pinField.value = "";
+      const gate = document.getElementById("hostingLockGate");
+      const content = document.getElementById("hostingUnlockedContent");
+      if (gate) gate.style.display = "block";
+      if (content) content.style.display = "none";
+      if (!silent) {
+        playTone("click");
+        showToast("تمّ قفل تبويب الاستضافة والحماية.");
+      }
+    }
+
+    async function changeHostingTabPin() {
+      const p1 = document.getElementById("newHostingPinInput").value.trim();
+      const p2 = document.getElementById("confirmHostingPinInput").value.trim();
+
+      if (p1.length < 4) {
+        playTone("error");
+        showToast("يجب أن تتكوّن كلمة السرّ الجديدة من 4 خاناتٍ على الأقلّ.");
+        return;
+      }
+      if (p1 !== p2) {
+        playTone("error");
+        showToast("كلمتا السرّ غير متطابقتين، تأكّد من كتابتهما بدقّةٍ.");
+        return;
+      }
+
+      try {
+        const newHash = await sha256Hex(p1);
+        await fbRest("shared_data/admin_config/hosting_pin_hash", "PUT", newHash);
+        hostingPinHash = newHash;
+        localStorage.setItem("emad_hosting_pin_hash", newHash);
+        document.getElementById("newHostingPinInput").value = "";
+        document.getElementById("confirmHostingPinInput").value = "";
+        playTone("success");
+        showToast("مبارك! تمّ اعتماد وحفظ كلمة سرّ تبويب الاستضافة والحماية بنجاح.");
+      } catch (e) {
+        playTone("error");
+        showToast("تعذّر حفظ كلمة السرّ في السحابة، تحقّق من اتّصالك بالشبكة.");
+      }
+    }
+
+    function toggleTokenVisibility() {
+      const inp = document.getElementById("ghToken");
+      inp.type = inp.type === "password" ? "text" : "password";
     }
 
     function switchTab(tabName, btn) {
       playTone("click");
+      if (tabName !== "settings" && hostingUnlocked) {
+        lockHostingTab(true);
+      }
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
       btn.classList.add("active");
@@ -997,16 +1244,13 @@
       document.getElementById("newProjSlug").value = textToSlug(document.getElementById("newProjTitle").value.trim());
     }
 
-    // حساب البصمة الرقميّة النظيفة لمنع التكرار حتى عند إعادة تسمية الملف
     async function computeCleanFingerprint(rawHtml) {
       let cleaned = String(rawHtml || "")
         .replace(/<meta\s+name=["']emad-cloud-signature["'][^>]*>\s*/gi, "")
         .replace(/<script\s+id=["']emad-cloud-auto-bridge["']>[\s\S]*?<\/script>\s*/gi, "")
         .replace(/\r\n/g, "\n")
         .trim();
-      const buf = new TextEncoder().encode(cleaned);
-      const hashBuf = await crypto.subtle.digest("SHA-256", buf);
-      return Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      return await sha256Hex(cleaned);
     }
 
     const dropZone = document.getElementById("dropZone");
@@ -1294,7 +1538,11 @@
       try {
         saveHostingConfig();
         let selfHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-        selfHtml = selfHtml.replace(/id="lockScreen"\s+style="[^"]*"/i, 'id="lockScreen"');
+        selfHtml = selfHtml
+          .replace(/id="lockScreen"\s+style="[^"]*"/i, 'id="lockScreen"')
+          .replace(/id="hostingLockGate"\s+class="tab-lock-card"\s+style="[^"]*"/i, 'id="hostingLockGate" class="tab-lock-card"')
+          .replace(/id="hostingUnlockedContent"\s+style="[^"]*"/i, 'id="hostingUnlockedContent" style="display:none;"');
+
         const url = await deployToCloudflareViaGitHub("manager", "مُدير ومولّد ورابط الأنظمة السحابيّ", selfHtml);
         if (!url) {
           playTone("error");
@@ -1807,7 +2055,7 @@
         localStorage.setItem("emad_admin_pin", np);
         document.getElementById("newPinInput").value = "";
         playTone("success");
-        showToast("تمّ تحديث الرقم السرّيّ وحفظه في السحابة بنجاح.");
+        showToast("تمّ تحديث الرقم السرّيّ العامّ وحفظه في السحابة بنجاح.");
       } catch (e) {
         playTone("error");
         showToast("تعذّر تحديث الرقم السرّيّ.");
